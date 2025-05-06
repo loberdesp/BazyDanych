@@ -32,7 +32,7 @@ public final class MainLayout extends AppLayout {
         var appLogo = VaadinIcon.CUBES.create();
         appLogo.addClassNames(TextColor.PRIMARY, IconSize.LARGE);
 
-        var appName = new Span("Yule Log Processor");
+        var appName = new Span("MPK");
         appName.addClassNames(FontWeight.SEMIBOLD, FontSize.LARGE);
 
         var header = new Div(appLogo, appName);

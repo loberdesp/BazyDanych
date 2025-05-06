@@ -23,9 +23,9 @@ import java.util.Optional;
 
 import static com.vaadin.flow.spring.data.VaadinSpringDataHelpers.toSpringPageRequest;
 
-@Route("")
+@Route("tasks")
 @PageTitle("Task List")
-@Menu(order = 0, icon = "vaadin:clipboard-check", title = "Task List")
+@Menu(order = 0, icon = "vaadin:clipboard-check", title = "Dodaj Przystanek")
 public class TodoView extends Main {
 
     private final TodoService todoService;
@@ -67,8 +67,39 @@ public class TodoView extends Main {
         addClassNames(LumoUtility.BoxSizing.BORDER, LumoUtility.Display.FLEX, LumoUtility.FlexDirection.COLUMN,
                 LumoUtility.Padding.MEDIUM, LumoUtility.Gap.SMALL);
 
-        add(new ViewToolbar("Task List", ViewToolbar.group(description, dueDate, createBtn)));
-        add(todoGrid);
+        add(new ViewToolbar("Dodaj Przystanek"));
+
+        // === DODANE POLA TEKSTOWE I PRZYCISK ===
+        // Pole 1: Nazwa przystanku
+        TextField stopName = new TextField("Nazwa przystanku");
+        stopName.setPlaceholder("Wprowadź nazwę przystanku");
+        stopName.setWidth("300px");
+
+        // Pole 2: Adres
+        TextField address = new TextField("Lokalizacja");
+        address.setPlaceholder("np 56.234.5, 12.3456");
+        address.setWidth("300px");
+
+        // Pole 3: Godzina otwarcia
+        TextField openingHours = new TextField("Nazwa ulicy");
+        openingHours.setPlaceholder("np. Główna 123");
+        openingHours.setWidth("300px");
+
+        // Przycisk "Zapisz przystanek"
+        Button saveButton = new Button("Zapisz przystanek", e -> {
+            Notification.show(
+                "Dodano przystanek: " + stopName.getValue() + 
+                ", Adres: " + address.getValue() + 
+                ", Godziny: " + openingHours.getValue(),
+                3000, 
+                Notification.Position.MIDDLE
+            );
+        });
+        saveButton.setWidth("300px");
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        // Dodanie komponentów do widoku
+        add(stopName, address, openingHours, saveButton);
     }
 
     private void createTodo() {
