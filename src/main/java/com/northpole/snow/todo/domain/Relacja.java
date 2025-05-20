@@ -1,26 +1,75 @@
 package com.northpole.snow.todo.domain;
 
 import jakarta.persistence.*;
-import java.util.List;
+import jakarta.validation.constraints.NotNull;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
+@Table(name = "relacja")
 public class Relacja {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false)
+    private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "pasazer_id")
-    private Pasazer pasazer;
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "pasazerid", nullable = false)
+    private Pasazer pasazerid;
 
-    @ManyToOne
-    @JoinColumn(name = "przystanek_poczatkowy_id")
-    private Przystanek przystanekPoczatkowy;
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "przystanekpoczatkowyid", nullable = false)
+    private Przystanek przystanekpoczatkowyid;
 
-    @ManyToOne
-    @JoinColumn(name = "przystanek_koncowy_id")
-    private Przystanek przystanekKoncowy;
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "przystanekkoncowyid", nullable = false)
+    private Przystanek przystanekkoncowyid;
 
-    @OneToMany(mappedBy = "relacja", cascade = CascadeType.ALL)
-    private List<Wyszukiwanie> wyszukiwania;
+    @OneToMany(mappedBy = "relacjaid")
+    private Set<Wyszukanie> wyszukania = new LinkedHashSet<>();
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Pasazer getPasazerid() {
+        return pasazerid;
+    }
+
+    public void setPasazerid(Pasazer pasazerid) {
+        this.pasazerid = pasazerid;
+    }
+
+    public Przystanek getPrzystanekpoczatkowyid() {
+        return przystanekpoczatkowyid;
+    }
+
+    public void setPrzystanekpoczatkowyid(Przystanek przystanekpoczatkowyid) {
+        this.przystanekpoczatkowyid = przystanekpoczatkowyid;
+    }
+
+    public Przystanek getPrzystanekkoncowyid() {
+        return przystanekkoncowyid;
+    }
+
+    public void setPrzystanekkoncowyid(Przystanek przystanekkoncowyid) {
+        this.przystanekkoncowyid = przystanekkoncowyid;
+    }
+
+    public Set<Wyszukanie> getWyszukania() {
+        return wyszukania;
+    }
+
+    public void setWyszukania(Set<Wyszukanie> wyszukania) {
+        this.wyszukania = wyszukania;
+    }
+
 }
