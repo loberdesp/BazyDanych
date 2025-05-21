@@ -33,9 +33,9 @@ public class BrowseRouteView extends Main {
         // Przycisk wyszukiwania
         Button searchButton = new Button("Wyszukaj trasę", e -> {
             if (lineNumber.getValue() != null && startStop.getValue() != null) {
-                Notification.show("Trasa: " + lineNumber.getValue() + 
+                Notification.show("Trasa: " + lineNumber.getValue() +
 
-                                Notification.Position.MIDDLE);
+                        Notification.Position.MIDDLE);
             } else {
                 Notification.show("Proszę wypełnić wszystkie pola", 3000, Notification.Position.MIDDLE);
             }
@@ -57,11 +57,10 @@ public class BrowseRouteView extends Main {
         // Główny layout
         VerticalLayout layout = new VerticalLayout();
         layout.add(
-            new ViewToolbar("Przeglądaj trasę"),
-            lineNumber,
-            startStop,
-            searchButton
-        );
+                new ViewToolbar("Przeglądaj trasę"),
+                lineNumber,
+                startStop,
+                searchButton);
         layout.setSpacing(true);
         layout.setPadding(true);
 

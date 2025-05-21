@@ -39,32 +39,32 @@ public class AddAdminView extends Main implements HasUrlParameter<String> {
         Button saveButton = new Button("Zapisz administratora", new Icon(VaadinIcon.CHECK));
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         saveButton.setWidth("300px");
-        
+
         saveButton.addClickListener(e -> {
             ConfirmDialog dialog = new ConfirmDialog();
             dialog.setHeader("Potwierdź nadanie uprawnień");
-            dialog.setText("Czy na pewno chcesz nadać uprawnienia administratora dla " + usernameField.getValue() + "?");
-            
+            dialog.setText(
+                    "Czy na pewno chcesz nadać uprawnienia administratora dla " + usernameField.getValue() + "?");
+
             dialog.setConfirmText("Potwierdź");
             dialog.setConfirmButtonTheme("primary success");
             dialog.addConfirmListener(confirmEvent -> {
                 // Tutaj byłaby logika zapisu
                 getUI().ifPresent(ui -> ui.navigate("szukaj-uzytkownikow"));
             });
-            
+
             dialog.setCancelText("Anuluj");
             dialog.open();
         });
 
         // Układ strony
         VerticalLayout layout = new VerticalLayout(
-            new ViewToolbar("Dodaj administratora"),
-            new H2(userId != null ? "Awansuj użytkownika" : "Dodaj nowego administratora"),
-            usernameField,
-            emailField,
-            passwordField,
-            saveButton
-        );
+                new ViewToolbar("Dodaj administratora"),
+                new H2(userId != null ? "Awansuj użytkownika" : "Dodaj nowego administratora"),
+                usernameField,
+                emailField,
+                passwordField,
+                saveButton);
         layout.setSpacing(true);
         layout.setPadding(true);
         add(layout);

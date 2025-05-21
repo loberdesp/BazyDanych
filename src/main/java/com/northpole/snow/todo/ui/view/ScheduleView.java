@@ -20,7 +20,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.flow.router.Menu;
-import java.time.format.DateTimeFormatter;  // Add this import
+import java.time.format.DateTimeFormatter; // Add this import
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -30,7 +30,7 @@ import java.util.List;
 
 @Route("harmonogram")
 @PageTitle("Zdefiniuj harmonogram")
-@Menu(order = 6, icon = "vaadin:calendar-clock", title = "Harmonogram")
+@Menu(order = 7, icon = "vaadin:calendar-clock", title = "Harmonogram")
 public class ScheduleView extends Main {
 
     public static class ScheduleItem {
@@ -40,8 +40,8 @@ public class ScheduleView extends Main {
         private LocalDate validFrom;
         private LocalDate validTo;
 
-        public ScheduleItem(String lineNumber, String direction, LocalTime departureTime, 
-                          LocalDate validFrom, LocalDate validTo) {
+        public ScheduleItem(String lineNumber, String direction, LocalTime departureTime,
+                LocalDate validFrom, LocalDate validTo) {
             this.lineNumber = lineNumber;
             this.direction = direction;
             this.departureTime = departureTime;
@@ -50,11 +50,25 @@ public class ScheduleView extends Main {
         }
 
         // Getters
-        public String getLineNumber() { return lineNumber; }
-        public String getDirection() { return direction; }
-        public LocalTime getDepartureTime() { return departureTime; }
-        public LocalDate getValidFrom() { return validFrom; }
-        public LocalDate getValidTo() { return validTo; }
+        public String getLineNumber() {
+            return lineNumber;
+        }
+
+        public String getDirection() {
+            return direction;
+        }
+
+        public LocalTime getDepartureTime() {
+            return departureTime;
+        }
+
+        public LocalDate getValidFrom() {
+            return validFrom;
+        }
+
+        public LocalDate getValidTo() {
+            return validTo;
+        }
     }
 
     private final List<ScheduleItem> scheduleItems = new ArrayList<>();
@@ -65,10 +79,9 @@ public class ScheduleView extends Main {
         createGrid();
 
         VerticalLayout layout = new VerticalLayout(
-            new ViewToolbar("Zdefiniuj harmonogram"),
-            createForm(),
-            grid
-        );
+                new ViewToolbar("Zdefiniuj harmonogram"),
+                createForm(),
+                grid);
 
         layout.setSpacing(true);
         layout.setPadding(true);
@@ -99,33 +112,31 @@ public class ScheduleView extends Main {
         Button addButton = new Button("Dodaj do harmonogramu", e -> {
             if (validateForm(lineNumber, direction, departureTime, validFrom, validTo)) {
                 addScheduleItem(
-                    lineNumber.getValue(),
-                    direction.getValue(),
-                    departureTime.getValue(),
-                    validFrom.getValue(),
-                    validTo.getValue()
-                );
+                        lineNumber.getValue(),
+                        direction.getValue(),
+                        departureTime.getValue(),
+                        validFrom.getValue(),
+                        validTo.getValue());
             }
         });
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         addButton.setWidth("300px");
 
         return new VerticalLayout(
-            lineNumber, direction, departureTime, 
-            validFrom, validTo,
-            addButton
-        );
+                lineNumber, direction, departureTime,
+                validFrom, validTo,
+                addButton);
     }
 
     private void createGrid() {
         grid.addColumn(ScheduleItem::getLineNumber).setHeader("Linia").setAutoWidth(true);
         grid.addColumn(ScheduleItem::getDirection).setHeader("Kierunek").setAutoWidth(true);
         grid.addColumn(item -> item.getDepartureTime().format(DateTimeFormatter.ofPattern("HH:mm")))
-            .setHeader("Godzina").setAutoWidth(true);
+                .setHeader("Godzina").setAutoWidth(true);
         grid.addColumn(item -> item.getValidFrom().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")))
-            .setHeader("Obowiązuje od").setAutoWidth(true);
+                .setHeader("Obowiązuje od").setAutoWidth(true);
         grid.addColumn(item -> item.getValidTo().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")))
-            .setHeader("Obowiązuje do").setAutoWidth(true);
+                .setHeader("Obowiązuje do").setAutoWidth(true);
 
         grid.addComponentColumn(item -> {
             Button deleteBtn = new Button(new Icon(VaadinIcon.TRASH));
@@ -139,25 +150,25 @@ public class ScheduleView extends Main {
     }
 
     private boolean validateForm(ComboBox<String> lineNumber, ComboBox<String> direction,
-                              TimePicker departureTime, DatePicker validFrom,
-                              DatePicker validTo) {
+            TimePicker departureTime, DatePicker validFrom,
+            DatePicker validTo) {
         if (lineNumber.isEmpty() || direction.isEmpty() || departureTime.isEmpty() ||
-            validFrom.isEmpty() || validTo.isEmpty()) {
+                validFrom.isEmpty() || validTo.isEmpty()) {
             Notification.show("Wypełnij wszystkie pola", 3000, Notification.Position.MIDDLE);
             return false;
         }
 
         if (validFrom.getValue().isAfter(validTo.getValue())) {
-            Notification.show("Data 'obowiązuje do' musi być późniejsza niż 'obowiązuje od'", 
-                            3000, Notification.Position.MIDDLE);
+            Notification.show("Data 'obowiązuje do' musi być późniejsza niż 'obowiązuje od'",
+                    3000, Notification.Position.MIDDLE);
             return false;
         }
 
         return true;
     }
 
-    private void addScheduleItem(String line, String direction, LocalTime time, 
-                               LocalDate from, LocalDate to) {
+    private void addScheduleItem(String line, String direction, LocalTime time,
+            LocalDate from, LocalDate to) {
         ScheduleItem newItem = new ScheduleItem(line, direction, time, from, to);
         scheduleItems.add(newItem);
         grid.getDataProvider().refreshAll();

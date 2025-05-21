@@ -46,12 +46,11 @@ public class BlockRouteView extends Main {
 
         // Przyciski akcji
         Button blockButton = new Button("Zablokuj trasę", e -> blockRoute(
-            lineNumber.getValue(),
-            direction.getValue(),
-            blockFrom.getValue(),
-            blockTo.getValue(),
-            reason.getValue()
-        ));
+                lineNumber.getValue(),
+                direction.getValue(),
+                blockFrom.getValue(),
+                blockTo.getValue(),
+                reason.getValue()));
         blockButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         blockButton.setWidth("300px");
 
@@ -61,16 +60,15 @@ public class BlockRouteView extends Main {
         // Główny layout
         VerticalLayout layout = new VerticalLayout();
         layout.add(
-            new ViewToolbar("Zablokuj trasę"),
-            lineNumber,
-            direction,
-            blockFrom,
-            blockTo,
-            reason,
-            blockButton,
-            cancelButton
-        );
-        
+                new ViewToolbar("Zablokuj trasę"),
+                lineNumber,
+                direction,
+                blockFrom,
+                blockTo,
+                reason,
+                blockButton,
+                cancelButton);
+
         layout.setSpacing(true);
         layout.setPadding(true);
 
@@ -85,17 +83,17 @@ public class BlockRouteView extends Main {
         }
 
         if (from.isAfter(to)) {
-            Notification.show("Data końca blokady musi być późniejsza niż początku", 3000, Notification.Position.MIDDLE);
+            Notification.show("Data końca blokady musi być późniejsza niż początku", 3000,
+                    Notification.Position.MIDDLE);
             return;
         }
 
         // Tutaj dodaj logikę zapisu do bazy danych
         String message = String.format(
-            "Trasa %s (%s) zablokowana od %s do %s. Powód: %s",
-            line,
-            direction,
-            reason.isEmpty() ? "brak" : reason
-        );
+                "Trasa %s (%s) zablokowana od %s do %s. Powód: %s",
+                line,
+                direction,
+                reason.isEmpty() ? "brak" : reason);
 
         Notification.show(message, 5000, Notification.Position.MIDDLE);
     }

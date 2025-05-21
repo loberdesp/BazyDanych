@@ -33,8 +33,8 @@ public class UnlockRouteView extends Main {
         private String reason;
         private String blockedBy;
 
-        public RouteBlock(String line, String direction, LocalDateTime blockFrom, 
-                        LocalDateTime blockTo, String reason, String blockedBy) {
+        public RouteBlock(String line, String direction, LocalDateTime blockFrom,
+                LocalDateTime blockTo, String reason, String blockedBy) {
             this.line = line;
             this.direction = direction;
             this.blockFrom = blockFrom;
@@ -44,31 +44,46 @@ public class UnlockRouteView extends Main {
         }
 
         // Getter methods
-        public String getLine() { return line; }
-        public String getDirection() { return direction; }
-        public LocalDateTime getBlockFrom() { return blockFrom; }
-        public LocalDateTime getBlockTo() { return blockTo; }
-        public String getReason() { return reason; }
-        public String getBlockedBy() { return blockedBy; }
+        public String getLine() {
+            return line;
+        }
+
+        public String getDirection() {
+            return direction;
+        }
+
+        public LocalDateTime getBlockFrom() {
+            return blockFrom;
+        }
+
+        public LocalDateTime getBlockTo() {
+            return blockTo;
+        }
+
+        public String getReason() {
+            return reason;
+        }
+
+        public String getBlockedBy() {
+            return blockedBy;
+        }
     }
 
     public UnlockRouteView() {
         List<RouteBlock> activeBlocks = getSampleRouteBlocks();
 
         Grid<RouteBlock> grid = new Grid<>(RouteBlock.class, false);
-        
+
         // Correct column definitions using lambda expressions
         grid.addColumn(route -> route.getLine()).setHeader("Linia").setAutoWidth(true);
         grid.addColumn(route -> route.getDirection()).setHeader("Kierunek").setAutoWidth(true);
-        grid.addColumn(route -> 
-            route.getBlockFrom().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
-        ).setHeader("Blokada od").setAutoWidth(true);
-        grid.addColumn(route -> 
-            route.getBlockTo().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
-        ).setHeader("Blokada do").setAutoWidth(true);
+        grid.addColumn(route -> route.getBlockFrom().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")))
+                .setHeader("Blokada od").setAutoWidth(true);
+        grid.addColumn(route -> route.getBlockTo().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")))
+                .setHeader("Blokada do").setAutoWidth(true);
         grid.addColumn(route -> route.getReason()).setHeader("Powód").setAutoWidth(true);
         grid.addColumn(route -> route.getBlockedBy()).setHeader("Zablokowane przez").setAutoWidth(true);
-        
+
         grid.addComponentColumn(route -> {
             Button unlockBtn = new Button("Odblokuj", new Icon(VaadinIcon.UNLOCK));
             unlockBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
@@ -84,11 +99,9 @@ public class UnlockRouteView extends Main {
 
         VerticalLayout layout = new VerticalLayout();
         layout.add(
-            new ViewToolbar("Odblokuj trasę"),
-            new HorizontalLayout(refreshBtn),
-            grid
-        );
-        
+                new ViewToolbar("Odblokuj trasę"),
+                new HorizontalLayout(refreshBtn),
+                grid);
 
         layout.setSpacing(true);
         layout.setPadding(true);
@@ -99,22 +112,20 @@ public class UnlockRouteView extends Main {
 
     private List<RouteBlock> getSampleRouteBlocks() {
         return Arrays.asList(
-            new RouteBlock("Linia 1", "Kierunek A → B", 
-                LocalDateTime.now().plusHours(1), 
-                LocalDateTime.now().plusDays(1),
-                "Remont torowiska", "admin"),
-            new RouteBlock("Linia 3", "Kierunek B → A", 
-                LocalDateTime.now().minusHours(2), 
-                LocalDateTime.now().plusHours(5),
-                "Awaria pojazdu", "technik")
-        );
+                new RouteBlock("Linia 1", "Kierunek A → B",
+                        LocalDateTime.now().plusHours(1),
+                        LocalDateTime.now().plusDays(1),
+                        "Remont torowiska", "admin"),
+                new RouteBlock("Linia 3", "Kierunek B → A",
+                        LocalDateTime.now().minusHours(2),
+                        LocalDateTime.now().plusHours(5),
+                        "Awaria pojazdu", "technik"));
     }
 
     private void unlockRoute(RouteBlock block) {
         Notification.show(
-            String.format("Trasa %s (%s) odblokowana przed czasem", block.getLine(), block.getDirection()),
-            3000, 
-            Notification.Position.MIDDLE
-        );
+                String.format("Trasa %s (%s) odblokowana przed czasem", block.getLine(), block.getDirection()),
+                3000,
+                Notification.Position.MIDDLE);
     }
 }

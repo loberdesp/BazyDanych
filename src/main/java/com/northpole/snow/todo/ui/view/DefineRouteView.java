@@ -36,9 +36,17 @@ public class DefineRouteView extends Main {
             this.address = address;
         }
 
-        public String getId() { return id; }
-        public String getName() { return name; }
-        public String getAddress() { return address; }
+        public String getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getAddress() {
+            return address;
+        }
 
         @Override
         public String toString() {
@@ -52,18 +60,36 @@ public class DefineRouteView extends Main {
         private BusStop endStop;
         private List<BusStop> intermediateStops = new ArrayList<>();
 
-        public String getRouteNumber() { return routeNumber; }
-        public void setRouteNumber(String routeNumber) { this.routeNumber = routeNumber; }
-        
-        public BusStop getStartStop() { return startStop; }
-        public void setStartStop(BusStop startStop) { this.startStop = startStop; }
-        
-        public BusStop getEndStop() { return endStop; }
-        public void setEndStop(BusStop endStop) { this.endStop = endStop; }
-        
-        public List<BusStop> getIntermediateStops() { return intermediateStops; }
-        public void setIntermediateStops(List<BusStop> intermediateStops) { 
-            this.intermediateStops = intermediateStops; 
+        public String getRouteNumber() {
+            return routeNumber;
+        }
+
+        public void setRouteNumber(String routeNumber) {
+            this.routeNumber = routeNumber;
+        }
+
+        public BusStop getStartStop() {
+            return startStop;
+        }
+
+        public void setStartStop(BusStop startStop) {
+            this.startStop = startStop;
+        }
+
+        public BusStop getEndStop() {
+            return endStop;
+        }
+
+        public void setEndStop(BusStop endStop) {
+            this.endStop = endStop;
+        }
+
+        public List<BusStop> getIntermediateStops() {
+            return intermediateStops;
+        }
+
+        public void setIntermediateStops(List<BusStop> intermediateStops) {
+            this.intermediateStops = intermediateStops;
         }
     }
 
@@ -78,24 +104,23 @@ public class DefineRouteView extends Main {
 
         // Formularz
         FormLayout formLayout = new FormLayout();
-        
+
         // Numer trasy
         TextField routeNumber = new TextField("Numer trasy");
         routeNumber.setPlaceholder("np. 123, A12, M5");
         routeNumber.setRequired(true);
         binder.forField(routeNumber)
-              .asRequired("Numer trasy jest wymagany")
-              .bind(Route::getRouteNumber, Route::setRouteNumber);
+                .asRequired("Numer trasy jest wymagany")
+                .bind(Route::getRouteNumber, Route::setRouteNumber);
 
         // Lista przystanków (przykładowe dane)
         List<BusStop> availableStops = List.of(
-            new BusStop("1", "Dworzec Główny", "ul. Kolejowa 1"),
-            new BusStop("2", "Plac Wolności", "ul. Wolności 5"),
-            new BusStop("3", "Rondo Reagana", "al. Solidarności"),
-            new BusStop("4", "Osiedle Słoneczne", "ul. Słoneczna 12"),
-            new BusStop("5", "Szpital Miejski", "ul. Medyczna 8"),
-            new BusStop("6", "Centrum Handlowe", "ul. Handlowa 20")
-        );
+                new BusStop("1", "Dworzec Główny", "ul. Kolejowa 1"),
+                new BusStop("2", "Plac Wolności", "ul. Wolności 5"),
+                new BusStop("3", "Rondo Reagana", "al. Solidarności"),
+                new BusStop("4", "Osiedle Słoneczne", "ul. Słoneczna 12"),
+                new BusStop("5", "Szpital Miejski", "ul. Medyczna 8"),
+                new BusStop("6", "Centrum Handlowe", "ul. Handlowa 20"));
 
         // Przystanek początkowy
         ComboBox<BusStop> startStop = new ComboBox<>("Przystanek początkowy");
@@ -103,8 +128,8 @@ public class DefineRouteView extends Main {
         startStop.setItemLabelGenerator(BusStop::toString);
         startStop.setRequired(true);
         binder.forField(startStop)
-              .asRequired("Wybierz przystanek początkowy")
-              .bind(Route::getStartStop, Route::setStartStop);
+                .asRequired("Wybierz przystanek początkowy")
+                .bind(Route::getStartStop, Route::setStartStop);
 
         // Przystanek końcowy
         ComboBox<BusStop> endStop = new ComboBox<>("Przystanek końcowy");
@@ -112,23 +137,23 @@ public class DefineRouteView extends Main {
         endStop.setItemLabelGenerator(BusStop::toString);
         endStop.setRequired(true);
         binder.forField(endStop)
-              .asRequired("Wybierz przystanek końcowy")
-              .bind(Route::getEndStop, Route::setEndStop);
+                .asRequired("Wybierz przystanek końcowy")
+                .bind(Route::getEndStop, Route::setEndStop);
 
         // Przystanki pośrednie
         ComboBox<BusStop> intermediateStop = new ComboBox<>("Dodaj przystanek pośredni");
         intermediateStop.setItems(availableStops);
         intermediateStop.setItemLabelGenerator(BusStop::toString);
-        
+
         Button addIntermediateStop = new Button("Dodaj", new Icon(VaadinIcon.PLUS));
         addIntermediateStop.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        
+
         HorizontalLayout intermediateLayout = new HorizontalLayout(intermediateStop, addIntermediateStop);
-        
+
         VerticalLayout intermediateStopsList = new VerticalLayout();
         intermediateStopsList.setPadding(false);
         intermediateStopsList.setSpacing(false);
-        
+
         addIntermediateStop.addClickListener(e -> {
             BusStop selected = intermediateStop.getValue();
             if (selected != null && !newRoute.getIntermediateStops().contains(selected)) {
@@ -141,7 +166,7 @@ public class DefineRouteView extends Main {
         // Przyciski akcji
         Button saveButton = new Button("Zapisz trasę", new Icon(VaadinIcon.CHECK));
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        
+
         Button cancelButton = new Button("Anuluj", new Icon(VaadinIcon.CLOSE));
         cancelButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
@@ -151,18 +176,16 @@ public class DefineRouteView extends Main {
         // Układanie formularza
         formLayout.add(routeNumber, startStop, endStop, intermediateLayout, intermediateStopsList);
         formLayout.setResponsiveSteps(
-            new FormLayout.ResponsiveStep("0", 1),
-            new FormLayout.ResponsiveStep("500px", 2)
-        );
+                new FormLayout.ResponsiveStep("0", 1),
+                new FormLayout.ResponsiveStep("500px", 2));
         formLayout.setColspan(intermediateLayout, 2);
         formLayout.setColspan(intermediateStopsList, 2);
 
         // Główny układ
         VerticalLayout mainLayout = new VerticalLayout(
-            header,
-            formLayout,
-            buttonsLayout
-        );
+                header,
+                formLayout,
+                buttonsLayout);
         mainLayout.setMaxWidth("800px");
         mainLayout.setPadding(true);
         add(mainLayout);
@@ -190,28 +213,28 @@ public class DefineRouteView extends Main {
 
     private void updateIntermediateStopsList(VerticalLayout layout, Route route, Binder<Route> binder) {
         layout.removeAll();
-        
+
         route.getIntermediateStops().forEach(stop -> {
             HorizontalLayout stopLayout = new HorizontalLayout();
             stopLayout.setSpacing(true);
-            
+
             TextField stopField = new TextField();
             stopField.setValue(stop.toString());
             stopField.setReadOnly(true);
             stopField.setWidthFull();
-            
+
             Button removeButton = new Button(new Icon(VaadinIcon.TRASH));
             removeButton.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_TERTIARY);
             removeButton.addClickListener(e -> {
                 route.getIntermediateStops().remove(stop);
                 updateIntermediateStopsList(layout, route, binder);
             });
-            
+
             stopLayout.add(stopField, removeButton);
             stopLayout.expand(stopField);
             layout.add(stopLayout);
         });
-        
+
         binder.setBean(route);
     }
 
@@ -219,11 +242,11 @@ public class DefineRouteView extends Main {
         if (route.getStartStop().equals(route.getEndStop())) {
             throw new IllegalArgumentException("Przystanek początkowy i końcowy nie mogą być takie same");
         }
-        
+
         if (route.getIntermediateStops().contains(route.getStartStop())) {
             throw new IllegalArgumentException("Przystanek początkowy nie może być wśród przystanków pośrednich");
         }
-        
+
         if (route.getIntermediateStops().contains(route.getEndStop())) {
             throw new IllegalArgumentException("Przystanek końcowy nie może być wśród przystanków pośrednich");
         }
@@ -232,23 +255,23 @@ public class DefineRouteView extends Main {
     private void showSaveConfirmation(Route route) {
         ConfirmDialog dialog = new ConfirmDialog();
         dialog.setHeader("Potwierdź utworzenie trasy");
-        
+
         // Budowanie opisu trasy
         StringBuilder routeDescription = new StringBuilder();
         routeDescription.append("Numer trasy: ").append(route.getRouteNumber()).append("\n");
         routeDescription.append("Przystanek początkowy: ").append(route.getStartStop().getName()).append("\n");
-        
+
         if (!route.getIntermediateStops().isEmpty()) {
             routeDescription.append("Przystanki pośrednie:\n");
             for (BusStop stop : route.getIntermediateStops()) {
                 routeDescription.append(" - ").append(stop.getName()).append("\n");
             }
         }
-        
+
         routeDescription.append("Przystanek końcowy: ").append(route.getEndStop().getName());
-        
+
         dialog.setText(routeDescription.toString());
-        
+
         dialog.setConfirmText("Zapisz");
         dialog.setConfirmButtonTheme("primary success");
         dialog.addConfirmListener(e -> {
@@ -256,7 +279,7 @@ public class DefineRouteView extends Main {
             saveRouteToDatabase(route);
             Notification.show("Trasa została pomyślnie zapisana", 3000, Notification.Position.MIDDLE);
         });
-        
+
         dialog.setCancelable(true);
         dialog.setCancelText("Anuluj");
         dialog.open();
@@ -269,7 +292,7 @@ public class DefineRouteView extends Main {
         System.out.println("Numer: " + route.getRouteNumber());
         System.out.println("Start: " + route.getStartStop().getName());
         System.out.println("Koniec: " + route.getEndStop().getName());
-        System.out.println("Przystanki pośrednie: " + 
-            route.getIntermediateStops().stream().map(BusStop::getName).toList());
+        System.out.println("Przystanki pośrednie: " +
+                route.getIntermediateStops().stream().map(BusStop::getName).toList());
     }
 }

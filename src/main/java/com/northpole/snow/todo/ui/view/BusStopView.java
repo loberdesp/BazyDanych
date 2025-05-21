@@ -13,7 +13,7 @@ import com.vaadin.flow.router.Menu;
 
 @Route("bus-stops")
 @PageTitle("Manage Bus Stops")
-@Menu(order = 1, icon = "vaadin:map-marker", title = "Usuń przystanek")
+@Menu(order = 2, icon = "vaadin:map-marker", title = "Usuń przystanek")
 public class BusStopView extends Main {
 
     public BusStopView() {
@@ -30,16 +30,15 @@ public class BusStopView extends Main {
         // Set up the main layout
         setSizeFull();
         addClassNames(
-            LumoUtility.BoxSizing.BORDER, 
-            LumoUtility.Display.FLEX, 
-            LumoUtility.FlexDirection.COLUMN,
-            LumoUtility.Padding.MEDIUM, 
-            LumoUtility.Gap.SMALL
-        );
+                LumoUtility.BoxSizing.BORDER,
+                LumoUtility.Display.FLEX,
+                LumoUtility.FlexDirection.COLUMN,
+                LumoUtility.Padding.MEDIUM,
+                LumoUtility.Gap.SMALL);
 
         // Add toolbar with title
         add(new ViewToolbar("Usuń przystanek"));
-        
+
         // Add form components
         add(stopName, saveButton);
     }
