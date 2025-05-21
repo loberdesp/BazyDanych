@@ -19,13 +19,14 @@ INSERT INTO PrzystanekNaTrasie (PrzystanekID, TrasaID, Kolejnosc, CzasPrzejazdu)
 VALUES 
   (1, 1, 1, 0),     -- Grunwaldzki
   (2, 1, 2, 10),    -- Dworzec
-  (3, 1, 3, 20);    -- Stadion
+  (5, 1, 3, 18),    -- Rynek (wspólny przystanek)
+  (3, 1, 4, 25);    -- Stadion
 
 -- Przypisz przystanki do trasy 202 (ID trasy = 2)
 INSERT INTO PrzystanekNaTrasie (PrzystanekID, TrasaID, Kolejnosc, CzasPrzejazdu)
 VALUES 
   (4, 2, 1, 0),     -- Plac Bema
-  (5, 2, 2, 7),     -- Rynek
+  (5, 2, 2, 7),     -- Rynek (wspólny przystanek)
   (6, 2, 3, 15);    -- Borek
 
 -- Harmonogramy dla trasy 101
