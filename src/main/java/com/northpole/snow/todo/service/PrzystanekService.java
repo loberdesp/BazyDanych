@@ -32,6 +32,14 @@ public class PrzystanekService {
     }
   }
 
+  public List<Przystanek> findAll() {
+    return przystanekRepository.findAll();
+  }
+
+  public List<Przystanek> findByLineNumber(String numerTrasy) {
+    return przystanekRepository.findByNumerTrasy(numerTrasy);
+  }
+
   public static class TrasaGodzinaDTO {
     public final String nazwaTrasy;
     public final Integer numerTrasy;
@@ -78,5 +86,24 @@ public class PrzystanekService {
       }
     }
     return wynik;
+  }
+
+  public List<Przystanek> searchByAll(String nazwa, String ulica, String numerTrasy) {
+    boolean nazwaOk = nazwa != null && !nazwa.isBlank();
+    boolean ulicaOk = ulica != null && !ulica.isBlank();
+    boolean numerOk = numerTrasy != null && !numerTrasy.isBlank();
+
+    if (!numerOk) {
+      return search(nazwa, ulica);
+    }
+
+    // Pobierz przystanki na danej linii
+    List<Przystanek> przystanki = przystanekRepository.findByNumerTrasy(numerTrasy);
+
+    // Filtrowanie po nazwie i ulicy jeśli podane
+    return przystanki.stream()
+        .filter(p -> !nazwaOk || p.getNazwa().toLowerCase().contains(nazwa.toLowerCase()))
+        .filter(p -> !ulicaOk || p.getUlica().toLowerCase().contains(ulica.toLowerCase()))
+        .toList();
   }
 }

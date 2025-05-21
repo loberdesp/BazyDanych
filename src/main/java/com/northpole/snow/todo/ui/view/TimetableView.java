@@ -34,11 +34,15 @@ public class TimetableView extends Main {
     stopNameField.setWidth("300px");
     TextField streetField = new TextField("Ulica");
     streetField.setWidth("300px");
+    TextField lineNumberField = new TextField("Numer linii");
+    lineNumberField.setWidth("200px");
 
     Grid<Przystanek> grid = new Grid<>(Przystanek.class, false);
     grid.addColumn(Przystanek::getNazwa).setHeader("Nazwa");
     grid.addColumn(Przystanek::getUlica).setHeader("Ulica");
-    grid.addColumn(Przystanek::getPolozenie).setHeader("Położenie");
+
+    // Domyślnie wyświetl wszystkie przystanki
+    grid.setItems(przystanekService.findAll());
 
     Dialog detailsDialog = new Dialog();
     detailsDialog.setWidth("600px"); // zwiększamy szerokość
@@ -52,7 +56,7 @@ public class TimetableView extends Main {
 
         VerticalLayout dialogContent = new VerticalLayout();
         dialogContent.setSizeFull();
-        dialogContent.add("Trasy i godziny kursowania dla: " + selected.getNazwa());
+        dialogContent.add("Przystanek: " + selected.getNazwa());
 
         Grid<PrzystanekService.TrasaGodzinaDTO> trasyGrid = new Grid<>(PrzystanekService.TrasaGodzinaDTO.class, false);
         trasyGrid.setAllRowsVisible(true);
@@ -80,22 +84,29 @@ public class TimetableView extends Main {
     });
 
     Button searchButton = new Button("Szukaj", e -> {
-      var wyniki = przystanekService.search(
-          stopNameField.getValue(),
-          streetField.getValue());
-      grid.setItems(wyniki);
+      String lineNumber = lineNumberField.getValue();
+      String stopName = stopNameField.getValue();
+      String street = streetField.getValue();
+
+      if (lineNumber != null && !lineNumber.isBlank()) {
+        grid.setItems(przystanekService.searchByAll(stopName, street, lineNumber));
+      } else {
+        grid.setItems(przystanekService.search(stopName, street));
+      }
     });
     searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
     Button resetButton = new Button("Resetuj", e -> {
       stopNameField.clear();
       streetField.clear();
-      grid.setItems();
+      lineNumberField.clear();
+      grid.setItems(przystanekService.findAll());
     });
 
     HorizontalLayout fieldsLayout = new HorizontalLayout(
         stopNameField,
-        streetField);
+        streetField,
+        lineNumberField);
 
     HorizontalLayout buttonLayout = new HorizontalLayout(searchButton, resetButton);
 

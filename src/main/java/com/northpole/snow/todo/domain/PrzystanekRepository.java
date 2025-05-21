@@ -22,4 +22,12 @@ public interface PrzystanekRepository extends JpaRepository<Przystanek, Integer>
           WHERE p = :przystanek
       """)
   Przystanek findWithTrasyAndKursy(@Param("przystanek") Przystanek przystanek);
+
+  @Query("""
+        SELECT DISTINCT p FROM Przystanek p
+        JOIN p.przystankinatrasie pnt
+        JOIN pnt.trasaid t
+        WHERE t.numertrasy = :numerTrasy
+      """)
+  List<Przystanek> findByNumerTrasy(@Param("numerTrasy") String numerTrasy);
 }
