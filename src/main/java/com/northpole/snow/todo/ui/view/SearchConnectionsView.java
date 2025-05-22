@@ -14,6 +14,19 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.northpole.snow.todo.domain.Trasa;
+import com.northpole.snow.todo.domain.Przystaneknatrasie;
+import com.northpole.snow.todo.domain.Kurs;
+import com.northpole.snow.todo.service.TrasaService;
+import com.northpole.snow.todo.service.PrzystanekService;
+import com.northpole.snow.todo.service.KursService;
+import com.northpole.snow.todo.service.ConnectionSearchService;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Comparator;
+import com.vaadin.flow.component.combobox.ComboBox;
 
 @PageTitle("Wyszukaj połączenia")
 @Route("my-view4")
@@ -21,36 +34,75 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 @AnonymousAllowed
 public class SearchConnectionsView extends Main {
 
-  public SearchConnectionsView() {
+  private final TrasaService trasaService;
+  private final KursService kursService;
+  private final ConnectionSearchService connectionSearchService;
 
-    TextField startStopField = new TextField("Przystanek początkowy");
+  @Autowired
+  public SearchConnectionsView(TrasaService trasaService, KursService kursService,
+      ConnectionSearchService connectionSearchService) {
+    this.trasaService = trasaService;
+    this.kursService = kursService;
+    this.connectionSearchService = connectionSearchService;
+
+    // Pobierz wszystkie przystanki z bazy
+    List<String> allStops = trasaService.getAllStopsFromDb();
+
+    ComboBox<String> startStopField = new ComboBox<>("Przystanek początkowy");
+    startStopField.setItems(allStops);
+    startStopField.setAllowCustomValue(false);
     startStopField.setWidth("200px");
-    TextField endStopField = new TextField("Przystanek docelowy");
+
+    ComboBox<String> endStopField = new ComboBox<>("Przystanek docelowy");
+    endStopField.setItems(allStops);
+    endStopField.setAllowCustomValue(false);
     endStopField.setWidth("200px");
+
     TimePicker departureTimeField = new TimePicker("Godzina odjazdu");
     departureTimeField.setWidth("200px");
 
     Button searchButton = new Button("Szukaj");
     searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
+    Grid<Connection> connectionGrid = new Grid<>(Connection.class, false);
+
     Button resetButton = new Button("Resetuj", e -> {
       startStopField.clear();
       endStopField.clear();
       departureTimeField.clear();
+      connectionGrid.setItems(new ArrayList<>()); // resetuj tabelę
     });
 
     HorizontalLayout buttonLayout = new HorizontalLayout(searchButton, resetButton);
 
-    Grid<Connection> connectionGrid = new Grid<>(Connection.class, false);
     connectionGrid.addColumn(Connection::getStartStop).setHeader("Przystanek początkowy");
     connectionGrid.addColumn(Connection::getEndStop).setHeader("Przystanek docelowy");
+    connectionGrid.addColumn(Connection::getLineNumber).setHeader("Nr linii");
+    connectionGrid.addColumn(Connection::getLineName).setHeader("Nazwa linii");
     connectionGrid.addColumn(Connection::getDepartureTime).setHeader("Czas odjazdu");
+    connectionGrid.addColumn(Connection::getTravelTime).setHeader("Czas podróży");
     connectionGrid.setWidthFull();
     connectionGrid.setHeight("300px");
 
-    connectionGrid.setItems(
-        new Connection("Przystanek A", "Przystanek B", "08:00", "08:30"),
-        new Connection("Przystanek C", "Przystanek D", "09:00", "09:45"));
+    connectionGrid.setItems(new ArrayList<>()); // domyślnie pusto
+
+    searchButton.addClickListener(e -> {
+      String startStop = startStopField.getValue();
+      String endStop = endStopField.getValue();
+      var afterTime = departureTimeField.getValue();
+
+      if (startStop == null || endStop == null || startStop.isBlank() || endStop.isBlank()) {
+        Notification.show("Podaj oba przystanki!", 3000, Notification.Position.MIDDLE);
+        return;
+      }
+
+      List<Connection> found = connectionSearchService.findConnections(startStop, endStop, afterTime);
+
+      if (found.isEmpty()) {
+        Notification.show("Brak połączeń dla podanych przystanków.", 3000, Notification.Position.MIDDLE);
+      }
+      connectionGrid.setItems(found);
+    });
 
     connectionGrid.addItemClickListener(event -> {
       Connection selected = event.getItem();
@@ -70,16 +122,29 @@ public class SearchConnectionsView extends Main {
   }
 
   public static class Connection {
+    private String lineNumber;
+    private String lineName;
     private String startStop;
     private String endStop;
     private String departureTime;
-    private String arrivalTime;
+    private String travelTime;
 
-    public Connection(String startStop, String endStop, String departureTime, String arrivalTime) {
+    public Connection(String lineNumber, String lineName, String startStop, String endStop, String departureTime,
+        String travelTime) {
+      this.lineNumber = lineNumber;
+      this.lineName = lineName;
       this.startStop = startStop;
       this.endStop = endStop;
       this.departureTime = departureTime;
-      this.arrivalTime = arrivalTime;
+      this.travelTime = travelTime;
+    }
+
+    public String getLineNumber() {
+      return lineNumber;
+    }
+
+    public String getLineName() {
+      return lineName;
     }
 
     public String getStartStop() {
@@ -94,8 +159,8 @@ public class SearchConnectionsView extends Main {
       return departureTime;
     }
 
-    public String getArrivalTime() {
-      return arrivalTime;
+    public String getTravelTime() {
+      return travelTime;
     }
   }
 }
