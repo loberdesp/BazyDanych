@@ -8,7 +8,6 @@ import java.util.List;
 
 public interface TrasaRepository extends JpaRepository<Trasa, Integer> {
 
-
   @Query("""
       SELECT t FROM Trasa t
       LEFT JOIN FETCH t.przystankinatrasie pit
@@ -16,4 +15,12 @@ public interface TrasaRepository extends JpaRepository<Trasa, Integer> {
       WHERE t.numertrasy = :numertrasy
       """)
   List<Trasa> findByNumertrasy(@Param("numertrasy") Integer numertrasy);
+
+  @Query("""
+      SELECT DISTINCT t FROM Trasa t
+      LEFT JOIN FETCH t.kurs k
+      LEFT JOIN FETCH t.przystankinatrasie pit
+      LEFT JOIN FETCH pit.przystanekid
+      """)
+  List<Trasa> findAllWithKursAndPrzystanki();
 }

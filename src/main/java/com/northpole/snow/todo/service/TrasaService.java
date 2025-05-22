@@ -151,4 +151,9 @@ public class TrasaService {
       return false;
     }
   }
+
+  // Pobierz wszystkie trasy
+  public List<Trasa> getAllTrasy() {
+    return trasaRepository.findAllWithKursAndPrzystanki();
+  }
 }

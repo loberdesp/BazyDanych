@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 
 @Route("blokuj-trase")
 @PageTitle("Zablokuj trasę")
-@Menu(order = 4, icon = "vaadin:lock", title = "Zablokuj trasę")
+@Menu(order = 15, icon = "vaadin:lock", title = "Zablokuj trasę")
 public class BlockRouteView extends Main {
 
     public BlockRouteView() {

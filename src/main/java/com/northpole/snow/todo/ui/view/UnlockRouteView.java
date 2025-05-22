@@ -22,7 +22,7 @@ import java.util.List;
 
 @Route("odblokuj-trase")
 @PageTitle("Odblokuj trasę")
-@Menu(order = 5, icon = "vaadin:unlock", title = "Odblokuj trasę")
+@Menu(order = 15, icon = "vaadin:unlock", title = "Odblokuj trasę")
 public class UnlockRouteView extends Main {
 
     public static class RouteBlock {

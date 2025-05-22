@@ -1,6 +1,10 @@
 package com.northpole.snow.todo.ui.view;
 
 import com.northpole.snow.base.ui.component.ViewToolbar;
+import com.northpole.snow.todo.domain.Kurs;
+import com.northpole.snow.todo.domain.Trasa;
+import com.northpole.snow.todo.service.KursService;
+import com.northpole.snow.todo.service.TrasaService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -16,44 +20,27 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.flow.router.Menu;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Route("harmonogram")
 @PageTitle("Zdefiniuj kurs")
-@Menu(order = 7, icon = "vaadin:calendar-clock", title = "Kurs")
+@Menu(order = 4, icon = "vaadin:calendar-clock", title = "Dodaj kurs")
 public class ScheduleView extends Main {
 
-    public static class ScheduleItem {
-        private String lineNumber;
-        private String lineName;
-        private LocalTime departureTime;
+    private final KursService kursService;
+    private final TrasaService trasaService;
+    private final Grid<Kurs> grid = new Grid<>(Kurs.class, false);
 
-        public ScheduleItem(String lineNumber, String lineName, LocalTime departureTime) {
-            this.lineNumber = lineNumber;
-            this.lineName = lineName;
-            this.departureTime = departureTime;
-        }
+    @Autowired
+    public ScheduleView(KursService kursService, TrasaService trasaService) {
+        this.kursService = kursService;
+        this.trasaService = trasaService;
 
-        public String getLineNumber() {
-            return lineNumber;
-        }
-
-        public String getLineName() {
-            return lineName;
-        }
-
-        public LocalTime getDepartureTime() {
-            return departureTime;
-        }
-    }
-
-    private final List<ScheduleItem> scheduleItems = new ArrayList<>();
-    private final Grid<ScheduleItem> grid = new Grid<>();
-
-    public ScheduleView() {
         createGrid();
 
         VerticalLayout layout = new VerticalLayout(
@@ -65,15 +52,51 @@ public class ScheduleView extends Main {
         layout.setPadding(true);
         add(layout);
         addClassName(LumoUtility.Padding.LARGE);
+
+        refreshGrid();
     }
 
     private VerticalLayout createForm() {
-        ComboBox<String> lineNumber = new ComboBox<>("Numer linii");
-        lineNumber.setItems("1", "2", "3", "4", "5");
+        // Pobierz wszystkie trasy
+        List<Trasa> trasy = trasaService.getAllTrasy();
+
+        // Zbierz unikalne numery linii
+        List<Integer> numeryLinii = trasy.stream()
+                .map(Trasa::getNumertrasy)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        // Mapuj numer linii -> lista tras o tym numerze
+        Map<Integer, List<Trasa>> trasyByNumer = trasy.stream()
+                .collect(Collectors.groupingBy(Trasa::getNumertrasy));
+
+        ComboBox<Integer> lineNumber = new ComboBox<>("Numer linii");
+        lineNumber.setItems(numeryLinii);
         lineNumber.setWidth("200px");
 
-        TextField lineName = new TextField("Nazwa linii");
+        ComboBox<Trasa> lineName = new ComboBox<>("Nazwa linii");
         lineName.setWidth("200px");
+        lineName.setItemLabelGenerator(trasa -> trasa.getNazwatrasy());
+
+        lineNumber.addValueChangeListener(e -> {
+            Integer selectedNum = e.getValue();
+            if (selectedNum != null) {
+                List<Trasa> trasyDlaNumeru = trasyByNumer.getOrDefault(selectedNum, List.of());
+                lineName.setItems(trasyDlaNumeru);
+                lineName.setEnabled(true);
+                if (trasyDlaNumeru.size() == 1) {
+                    lineName.setValue(trasyDlaNumeru.get(0));
+                } else {
+                    lineName.clear();
+                }
+            } else {
+                lineName.clear();
+                lineName.setItems();
+                lineName.setEnabled(false);
+            }
+        });
+        lineName.setEnabled(false);
 
         TimePicker departureTime = new TimePicker("Godzina startu");
         departureTime.setWidth("200px");
@@ -83,12 +106,13 @@ public class ScheduleView extends Main {
                 Notification.show("Wypełnij wszystkie pola", 3000, Notification.Position.MIDDLE);
                 return;
             }
-            scheduleItems.add(new ScheduleItem(
-                    lineNumber.getValue(),
-                    lineName.getValue(),
-                    departureTime.getValue()));
-            grid.getDataProvider().refreshAll();
-            Notification.show("Dodano kurs", 3000, Notification.Position.MIDDLE);
+            boolean ok = kursService.addKurs(lineName.getValue().getNumertrasy(), departureTime.getValue());
+            if (ok) {
+                Notification.show("Dodano kurs", 3000, Notification.Position.MIDDLE);
+                refreshGrid();
+            } else {
+                Notification.show("Nie udało się dodać kursu", 3000, Notification.Position.MIDDLE);
+            }
         });
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
@@ -99,23 +123,17 @@ public class ScheduleView extends Main {
     }
 
     private void createGrid() {
-        grid.addColumn(ScheduleItem::getLineNumber).setHeader("Numer linii").setAutoWidth(true);
-        grid.addColumn(ScheduleItem::getLineName).setHeader("Nazwa linii").setAutoWidth(true);
-        grid.addColumn(item -> item.getDepartureTime() != null ? item.getDepartureTime().toString() : "")
+        grid.addColumn(k -> k.getTrasaid() != null ? k.getTrasaid().getNumertrasy() : "").setHeader("Numer linii")
+                .setAutoWidth(true);
+        grid.addColumn(k -> k.getTrasaid() != null ? k.getTrasaid().getNazwatrasy() : "").setHeader("Nazwa linii")
+                .setAutoWidth(true);
+        grid.addColumn(k -> k.getGodzinastartu() != null ? k.getGodzinastartu().toString() : "")
                 .setHeader("Godzina startu").setAutoWidth(true);
 
-        grid.addComponentColumn(item -> {
-            Button deleteBtn = new Button("Usuń");
-            deleteBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
-            deleteBtn.addClickListener(e -> {
-                scheduleItems.remove(item);
-                grid.getDataProvider().refreshAll();
-                Notification.show("Usunięto kurs", 3000, Notification.Position.MIDDLE);
-            });
-            return deleteBtn;
-        }).setHeader("Akcje");
-
         grid.setHeight("400px");
-        grid.setItems(scheduleItems);
+    }
+
+    private void refreshGrid() {
+        grid.setItems(kursService.findAll());
     }
 }

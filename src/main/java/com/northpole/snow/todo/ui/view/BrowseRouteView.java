@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 @Route("przegladaj-trase")
 @PageTitle("Przeglądaj trasę")
-@Menu(order = 3, icon = "vaadin:road", title = "Przeglądaj trasę")
+@Menu(order = 6, icon = "vaadin:road", title = "Przeglądaj trasę")
 public class BrowseRouteView extends Main {
 
     private final TrasaService trasaService;

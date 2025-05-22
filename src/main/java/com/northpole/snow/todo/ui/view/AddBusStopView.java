@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Route("add-bus-stop")
 @PageTitle("Dodaj przystanek")
-@Menu(order = 4, icon = "vaadin:plus", title = "Dodaj przystanek")
+@Menu(order = 1, icon = "vaadin:plus", title = "Dodaj przystanek")
 public class AddBusStopView extends Main {
 
   private final PrzystanekRepository przystanekRepository;

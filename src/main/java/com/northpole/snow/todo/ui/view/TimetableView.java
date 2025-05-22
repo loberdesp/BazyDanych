@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @PageTitle("Rozklad jazdy")
 @Route("my-view3")
-@Menu(order = 6, title = "Rozkład jazdy", icon = "vaadin:calendar")
+@Menu(order = 5, title = "Rozkład jazdy", icon = "vaadin:calendar")
 @AnonymousAllowed
 public class TimetableView extends Main {
 

@@ -17,7 +17,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 @PageTitle("Wyszukaj połączenia")
 @Route("my-view4")
-@Menu(order = 9, title = "Wyszukaj połączenia", icon = "vaadin:search")
+@Menu(order = 7, title = "Wyszukaj połączenia", icon = "vaadin:search")
 @AnonymousAllowed
 public class SearchConnectionsView extends Main {
 

@@ -23,7 +23,7 @@ import java.util.List;
 
 @Route("dodaj-trase")
 @PageTitle("Dodaj trasę")
-@Menu(order = 4, icon = "vaadin:plus", title = "Dodaj trasę")
+@Menu(order = 3, icon = "vaadin:plus", title = "Dodaj trasę")
 public class AddRouteView extends Main {
 
   private final TrasaService trasaService;
