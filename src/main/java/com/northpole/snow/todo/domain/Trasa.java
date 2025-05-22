@@ -31,7 +31,7 @@ public class Trasa {
     @OneToMany(mappedBy = "trasaid")
     private Set<Kurs> kurs = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "trasaid")
+    @OneToMany(mappedBy = "trasaid", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Przystaneknatrasie> przystankinatrasie = new LinkedHashSet<>();
 
     public Integer getId() {

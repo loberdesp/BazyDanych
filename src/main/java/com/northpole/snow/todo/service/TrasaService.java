@@ -3,6 +3,8 @@ package com.northpole.snow.todo.service;
 import com.northpole.snow.todo.domain.Trasa;
 import com.northpole.snow.todo.domain.TrasaRepository;
 import com.northpole.snow.todo.domain.Przystaneknatrasie;
+import com.northpole.snow.todo.domain.Przystanek;
+import com.northpole.snow.todo.domain.PrzystanekRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -12,9 +14,11 @@ import java.util.stream.Collectors;
 public class TrasaService {
 
   private final TrasaRepository trasaRepository;
+  private final PrzystanekRepository przystanekRepository;
 
-  public TrasaService(TrasaRepository trasaRepository) {
+  public TrasaService(TrasaRepository trasaRepository, PrzystanekRepository przystanekRepository) {
     this.trasaRepository = trasaRepository;
+    this.przystanekRepository = przystanekRepository;
   }
 
   // Zwraca listę wszystkich linii w formacie "Linia X"
@@ -88,6 +92,63 @@ public class TrasaService {
       return times;
     } catch (NumberFormatException e) {
       return Collections.emptyList();
+    }
+  }
+
+  // Zwraca nazwę trasy dla podanego numeru linii (np. "Linia 5")
+  public String getRouteNameForLine(String line) {
+    if (line == null || !line.startsWith("Linia "))
+      return "";
+    try {
+      int numerTrasy = Integer.parseInt(line.replace("Linia ", ""));
+      List<Trasa> trasy = trasaRepository.findByNumertrasy(numerTrasy);
+      if (!trasy.isEmpty()) {
+        // Zakładamy, że nazwa trasy jest taka sama dla wszystkich tras o tym numerze
+        return trasy.get(0).getNazwatrasy();
+      }
+      return "";
+    } catch (NumberFormatException e) {
+      return "";
+    }
+  }
+
+  // Pobierz wszystkie przystanki z bazy (unikalne nazwy)
+  public List<String> getAllStopsFromDb() {
+    return przystanekRepository.findAll().stream()
+        .map(Przystanek::getNazwa)
+        .distinct()
+        .sorted()
+        .collect(Collectors.toList());
+  }
+
+  // Dodaj nową trasę z przystankami na trasie
+  public boolean addNewRouteWithStops(String numer, String nazwa, List<String> przystanki, List<Integer> czasy) {
+    try {
+      List<Przystanek> przystankiEntities = przystanekRepository.findByNazwaIn(przystanki);
+      if (przystankiEntities.size() != przystanki.size())
+        return false;
+
+      Trasa trasa = new Trasa();
+      trasa.setNumertrasy(Integer.parseInt(numer));
+      trasa.setNazwatrasy(nazwa);
+      trasa.setKierunek((short) 1); // lub inny domyślny kierunek
+
+      Set<Przystaneknatrasie> przystankiNaTrasie = new LinkedHashSet<>();
+      for (int i = 0; i < przystankiEntities.size(); i++) {
+        Przystaneknatrasie pnt = new Przystaneknatrasie();
+        pnt.setTrasaid(trasa);
+        pnt.setPrzystanekid(przystankiEntities.get(i));
+        pnt.setKolejnosc(i + 1);
+        pnt.setCzasprzejazdu(czasy.get(i));
+        przystankiNaTrasie.add(pnt);
+      }
+      trasa.setPrzystankinatrasie(przystankiNaTrasie);
+
+      trasaRepository.save(trasa); // zapisuje trasę oraz przystanki na trasie dzięki kaskadzie
+
+      return true;
+    } catch (Exception e) {
+      return false;
     }
   }
 }

@@ -4,70 +4,49 @@ import com.northpole.snow.base.ui.component.ViewToolbar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.timepicker.TimePicker;
-import com.vaadin.flow.component.upload.Upload;
-import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.flow.router.Menu;
-import java.time.format.DateTimeFormatter; // Add this import
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Route("harmonogram")
-@PageTitle("Zdefiniuj harmonogram")
-@Menu(order = 7, icon = "vaadin:calendar-clock", title = "Harmonogram")
+@PageTitle("Zdefiniuj kurs")
+@Menu(order = 7, icon = "vaadin:calendar-clock", title = "Kurs")
 public class ScheduleView extends Main {
 
     public static class ScheduleItem {
         private String lineNumber;
-        private String direction;
+        private String lineName;
         private LocalTime departureTime;
-        private LocalDate validFrom;
-        private LocalDate validTo;
 
-        public ScheduleItem(String lineNumber, String direction, LocalTime departureTime,
-                LocalDate validFrom, LocalDate validTo) {
+        public ScheduleItem(String lineNumber, String lineName, LocalTime departureTime) {
             this.lineNumber = lineNumber;
-            this.direction = direction;
+            this.lineName = lineName;
             this.departureTime = departureTime;
-            this.validFrom = validFrom;
-            this.validTo = validTo;
         }
 
-        // Getters
         public String getLineNumber() {
             return lineNumber;
         }
 
-        public String getDirection() {
-            return direction;
+        public String getLineName() {
+            return lineName;
         }
 
         public LocalTime getDepartureTime() {
             return departureTime;
-        }
-
-        public LocalDate getValidFrom() {
-            return validFrom;
-        }
-
-        public LocalDate getValidTo() {
-            return validTo;
         }
     }
 
@@ -75,11 +54,10 @@ public class ScheduleView extends Main {
     private final Grid<ScheduleItem> grid = new Grid<>();
 
     public ScheduleView() {
-        createForm();
         createGrid();
 
         VerticalLayout layout = new VerticalLayout(
-                new ViewToolbar("Zdefiniuj harmonogram"),
+                new ViewToolbar("Zdefiniuj kurs"),
                 createForm(),
                 grid);
 
@@ -90,94 +68,54 @@ public class ScheduleView extends Main {
     }
 
     private VerticalLayout createForm() {
-        // Pola formularza
         ComboBox<String> lineNumber = new ComboBox<>("Numer linii");
-        lineNumber.setItems("Linia 1", "Linia 2", "Linia 3", "Linia 4");
-        lineNumber.setWidth("300px");
+        lineNumber.setItems("1", "2", "3", "4", "5");
+        lineNumber.setWidth("200px");
 
-        ComboBox<String> direction = new ComboBox<>("Kierunek");
-        direction.setItems("Kierunek A → B", "Kierunek B → A");
-        direction.setWidth("300px");
+        TextField lineName = new TextField("Nazwa linii");
+        lineName.setWidth("200px");
 
-        TimePicker departureTime = new TimePicker("Godzina odjazdu");
-        departureTime.setWidth("300px");
+        TimePicker departureTime = new TimePicker("Godzina startu");
+        departureTime.setWidth("200px");
 
-        DatePicker validFrom = new DatePicker("Obowiązuje od");
-        validFrom.setWidth("300px");
-
-        DatePicker validTo = new DatePicker("Obowiązuje do");
-        validTo.setWidth("300px");
-
-        // Przyciski
-        Button addButton = new Button("Dodaj do harmonogramu", e -> {
-            if (validateForm(lineNumber, direction, departureTime, validFrom, validTo)) {
-                addScheduleItem(
-                        lineNumber.getValue(),
-                        direction.getValue(),
-                        departureTime.getValue(),
-                        validFrom.getValue(),
-                        validTo.getValue());
+        Button addButton = new Button("Dodaj kurs", e -> {
+            if (lineNumber.isEmpty() || lineName.isEmpty() || departureTime.isEmpty()) {
+                Notification.show("Wypełnij wszystkie pola", 3000, Notification.Position.MIDDLE);
+                return;
             }
+            scheduleItems.add(new ScheduleItem(
+                    lineNumber.getValue(),
+                    lineName.getValue(),
+                    departureTime.getValue()));
+            grid.getDataProvider().refreshAll();
+            Notification.show("Dodano kurs", 3000, Notification.Position.MIDDLE);
         });
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        addButton.setWidth("300px");
 
-        return new VerticalLayout(
-                lineNumber, direction, departureTime,
-                validFrom, validTo,
-                addButton);
+        HorizontalLayout fields = new HorizontalLayout(lineNumber, lineName, departureTime, addButton);
+        fields.setAlignItems(Alignment.END);
+
+        return new VerticalLayout(fields);
     }
 
     private void createGrid() {
-        grid.addColumn(ScheduleItem::getLineNumber).setHeader("Linia").setAutoWidth(true);
-        grid.addColumn(ScheduleItem::getDirection).setHeader("Kierunek").setAutoWidth(true);
-        grid.addColumn(item -> item.getDepartureTime().format(DateTimeFormatter.ofPattern("HH:mm")))
-                .setHeader("Godzina").setAutoWidth(true);
-        grid.addColumn(item -> item.getValidFrom().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")))
-                .setHeader("Obowiązuje od").setAutoWidth(true);
-        grid.addColumn(item -> item.getValidTo().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")))
-                .setHeader("Obowiązuje do").setAutoWidth(true);
+        grid.addColumn(ScheduleItem::getLineNumber).setHeader("Numer linii").setAutoWidth(true);
+        grid.addColumn(ScheduleItem::getLineName).setHeader("Nazwa linii").setAutoWidth(true);
+        grid.addColumn(item -> item.getDepartureTime() != null ? item.getDepartureTime().toString() : "")
+                .setHeader("Godzina startu").setAutoWidth(true);
 
         grid.addComponentColumn(item -> {
-            Button deleteBtn = new Button(new Icon(VaadinIcon.TRASH));
+            Button deleteBtn = new Button("Usuń");
             deleteBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
-            deleteBtn.addClickListener(e -> removeScheduleItem(item));
+            deleteBtn.addClickListener(e -> {
+                scheduleItems.remove(item);
+                grid.getDataProvider().refreshAll();
+                Notification.show("Usunięto kurs", 3000, Notification.Position.MIDDLE);
+            });
             return deleteBtn;
         }).setHeader("Akcje");
 
         grid.setHeight("400px");
         grid.setItems(scheduleItems);
-    }
-
-    private boolean validateForm(ComboBox<String> lineNumber, ComboBox<String> direction,
-            TimePicker departureTime, DatePicker validFrom,
-            DatePicker validTo) {
-        if (lineNumber.isEmpty() || direction.isEmpty() || departureTime.isEmpty() ||
-                validFrom.isEmpty() || validTo.isEmpty()) {
-            Notification.show("Wypełnij wszystkie pola", 3000, Notification.Position.MIDDLE);
-            return false;
-        }
-
-        if (validFrom.getValue().isAfter(validTo.getValue())) {
-            Notification.show("Data 'obowiązuje do' musi być późniejsza niż 'obowiązuje od'",
-                    3000, Notification.Position.MIDDLE);
-            return false;
-        }
-
-        return true;
-    }
-
-    private void addScheduleItem(String line, String direction, LocalTime time,
-            LocalDate from, LocalDate to) {
-        ScheduleItem newItem = new ScheduleItem(line, direction, time, from, to);
-        scheduleItems.add(newItem);
-        grid.getDataProvider().refreshAll();
-        Notification.show("Dodano do harmonogramu", 3000, Notification.Position.MIDDLE);
-    }
-
-    private void removeScheduleItem(ScheduleItem item) {
-        scheduleItems.remove(item);
-        grid.getDataProvider().refreshAll();
-        Notification.show("Usunięto z harmonogramu", 3000, Notification.Position.MIDDLE);
     }
 }

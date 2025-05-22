@@ -13,6 +13,8 @@ public interface PrzystanekRepository extends JpaRepository<Przystanek, Integer>
 
   List<Przystanek> findByUlicaContainingIgnoreCase(String ulica);
 
+  List<Przystanek> findByNazwaIn(List<String> nazwy);
+
   @Query("""
           SELECT DISTINCT p FROM Przystanek p
           LEFT JOIN FETCH p.przystankinatrasie pt
