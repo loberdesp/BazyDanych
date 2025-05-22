@@ -83,11 +83,12 @@ public class AddRouteView extends Main {
     // Dodaj pierwszy przystanek domyślnie
     addStopRow.run();
 
+    // Użyj DTO zdefiniowanego w TrasaService
+
     Button saveButton = new Button("Zapisz trasę", e -> {
       String num = routeNumber.getValue();
       String name = routeName.getValue();
-      List<String> stops = new ArrayList<>();
-      List<Integer> times = new ArrayList<>();
+      List<TrasaService.PrzystanekNaTrasieDTO> przystankiNaTrasie = new ArrayList<>();
       boolean valid = true;
       for (int i = 0; i < stopRows.size(); i++) {
         StopRow row = stopRows.get(i);
@@ -96,25 +97,24 @@ public class AddRouteView extends Main {
           valid = false;
           break;
         }
-        stops.add(stopVal.trim());
-        if (i == 0) {
-          times.add(0); // pierwszy przystanek, czas 0
-        } else {
-          Integer t = row.travelTime.getValue();
-          if (t == null || t < 0) {
-            valid = false;
-            break;
-          }
-          times.add(t);
+        int czas = (i == 0) ? 0 : (row.travelTime.getValue() != null ? row.travelTime.getValue() : -1);
+        if (czas < 0) {
+          valid = false;
+          break;
         }
+        przystankiNaTrasie.add(new TrasaService.PrzystanekNaTrasieDTO(
+            num != null ? num.trim() : "",
+            stopVal.trim(),
+            i + 1,
+            czas));
       }
-      if (num == null || num.trim().isEmpty() || name == null || name.trim().isEmpty() || stops.isEmpty() || !valid) {
+      if (num == null || num.trim().isEmpty() || name == null || name.trim().isEmpty() || przystankiNaTrasie.isEmpty()
+          || !valid) {
         Notification.show("Uzupełnij wszystkie pola i poprawnie podaj czasy przejazdu", 3000,
             Notification.Position.MIDDLE);
         return;
       }
-      // Zapisz trasę do bazy
-      boolean ok = trasaService.addNewRouteWithStops(num.trim(), name.trim(), stops, times);
+      boolean ok = trasaService.addNewRouteWithStopsDTO(num.trim(), name.trim(), przystankiNaTrasie);
       if (ok) {
         Notification.show("Dodano trasę!", 3000, Notification.Position.MIDDLE);
         routeNumber.clear();

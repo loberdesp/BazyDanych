@@ -106,7 +106,8 @@ public class ScheduleView extends Main {
                 Notification.show("Wypełnij wszystkie pola", 3000, Notification.Position.MIDDLE);
                 return;
             }
-            boolean ok = kursService.addKurs(lineName.getValue().getNumertrasy(), departureTime.getValue());
+            // Dodaj kurs po id trasy (nie po numerze)
+            boolean ok = kursService.addKursByTrasaId(lineName.getValue().getId(), departureTime.getValue());
             if (ok) {
                 Notification.show("Dodano kurs", 3000, Notification.Position.MIDDLE);
                 refreshGrid();

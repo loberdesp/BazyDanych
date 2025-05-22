@@ -54,12 +54,9 @@ public class BrowseRouteView extends Main {
         ComboBox<String> lineNumber = new ComboBox<>("Numer linii");
         lineNumber.setPlaceholder("Wybierz numer linii");
         List<String> allLines = trasaService.getAllLines();
-        // Ustaw wyświetlanie w formacie "(nr linii): (nazwa trasy)"
+        // Wyświetlaj "Linia X: Nazwa"
         lineNumber.setItems(allLines);
-        lineNumber.setItemLabelGenerator(line -> {
-            String routeName = trasaService.getRouteNameForLine(line);
-            return line + (routeName != null && !routeName.isEmpty() ? ": " + routeName : "");
-        });
+        lineNumber.setItemLabelGenerator(line -> line);
         lineNumber.setWidth("300px");
 
         // ComboBox dla przystanku początkowego

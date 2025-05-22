@@ -38,4 +38,16 @@ public class KursService {
     kursRepository.save(kurs);
     return true;
   }
+
+  public boolean addKursByTrasaId(Integer trasaId, LocalTime godzinaStartu) {
+    Optional<Trasa> trasaOpt = trasaRepository.findById(trasaId);
+    if (trasaOpt.isEmpty())
+      return false;
+
+    Kurs kurs = new Kurs();
+    kurs.setTrasaid(trasaOpt.get());
+    kurs.setGodzinastartu(godzinaStartu);
+    kursRepository.save(kurs);
+    return true;
+  }
 }
