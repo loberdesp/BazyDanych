@@ -1,5 +1,7 @@
 package com.northpole.snow.todo.ui.view;
 
+import com.northpole.snow.todo.domain.Pasazer;
+import com.northpole.snow.todo.domain.PasazerRepository;
 import com.northpole.snow.base.ui.component.ViewToolbar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -14,12 +16,20 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @PageTitle("Rejestracja")
 @Route("rejestracja")
 @Menu(order = 13, title = "Rejestracja", icon = "vaadin:user-check")
 @AnonymousAllowed
 public class RegistrationView extends Main {
+
+  @Autowired
+  private PasazerRepository pasazerRepository;
+
+  @Autowired
+  private PasswordEncoder passwordEncoder;
 
   public RegistrationView() {
 
@@ -46,8 +56,30 @@ public class RegistrationView extends Main {
         Notification.show("Hasła muszą być takie same.", 3000, Notification.Position.MIDDLE);
         return;
       }
-      // Tutaj powinna być logika rejestracji
+
+      // Check if user with this email or login already exists
+      if (pasazerRepository.findByEmail(emailField.getValue()).isPresent()) {
+        Notification.show("Użytkownik z takim emailem już istnieje.", 3000, Notification.Position.MIDDLE);
+        return;
+      }
+      if (pasazerRepository.findByLogin(emailField.getValue()).isPresent()) {
+        Notification.show("Użytkownik z takim loginem już istnieje.", 3000, Notification.Position.MIDDLE);
+        return;
+      }
+
+      // Create new Pasazer entity and set fields
+      Pasazer pasazer = new Pasazer();
+      pasazer.setImienazwisko(firstNameField.getValue() + " " + lastNameField.getValue());
+      pasazer.setEmail(emailField.getValue());
+      pasazer.setNumertelefonu(phoneField.getValue());
+      pasazer.setLogin(emailField.getValue()); // or you can add a login field if needed
+      pasazer.setHaslo(passwordEncoder.encode(passwordField.getValue()));
+
+      // Save to DB
+      pasazerRepository.save(pasazer);
+
       Notification.show("Zarejestrowano!", 3000, Notification.Position.MIDDLE);
+
       firstNameField.clear();
       lastNameField.clear();
       phoneField.clear();

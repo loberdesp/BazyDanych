@@ -1,24 +1,22 @@
 package com.northpole.snow.todo.config;
 
+import com.northpole.snow.todo.domain.AdministratorRepository;
+import com.northpole.snow.todo.domain.PasazerRepository;
+import com.northpole.snow.todo.service.CustomUserDetailsService;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
-import static org.springframework.security.config.Customizer.withDefaults;
-
-
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.security.core.userdetails.User;
 
 
 @EnableWebSecurity
@@ -26,55 +24,52 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 public class SecurityConfig {
 
     @Bean
-public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
-    UserDetails user = User.builder()
-            .username("user")
-            .password(passwordEncoder.encode("password123"))
-            .roles("USER")
-            .build();
-    return new InMemoryUserDetailsManager(user);
-}
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // Enable CSRF (critical for Vaadin)
-        .csrf(csrf -> csrf.disable())
-        .requestCache((requestCache) -> requestCache.disable())
+    public CustomUserDetailsService userDetailsService(
+            PasazerRepository pasazerRepository,
+            AdministratorRepository administratorRepository) {
+        return new CustomUserDetailsService(pasazerRepository, administratorRepository);
+    }
 
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(CustomUserDetailsService userDetailsService,
+                                                            PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   DaoAuthenticationProvider authProvider) throws Exception {
+
+        http.authenticationProvider(authProvider)
+            .csrf(csrf -> csrf.disable())
+            .requestCache(requestCache -> requestCache.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(    "/",
-    "/login",
-    "/register",
-    "/css/**",
-    "/js/**",
-    "/images/**",
-    "/VAADIN/**",
-    "/frontend/**",
-    "/frontend-es6/**",
-    "/frontend-esm/**",
-    "/webjars/**",
-    "/manifest.webmanifest",
-    "/sw.js",
-    "/offline.html",
-    "/icons/**",
-    "/themes/**"
+                .requestMatchers(
+                    "/", "/login", "/register",
+                    "/css/**", "/js/**", "/images/**",
+                    "/VAADIN/**", "/frontend/**", "/frontend-es6/**", "/frontend-esm/**",
+                    "/webjars/**", "/manifest.webmanifest", "/sw.js", "/offline.html",
+                    "/icons/**", "/themes/**"
                 ).permitAll()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .loginProcessingUrl("/login") // ważne!
+                .loginProcessingUrl("/login")
                 .permitAll()
                 .defaultSuccessUrl("/", true)
-            );
-            http.logout(withDefaults());
-            
-        return http.build();
-    }
+            )
+            .logout(logout -> logout.logoutSuccessUrl("/login?logout"));
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return http.build();
     }
 }
