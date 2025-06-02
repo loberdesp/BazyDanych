@@ -9,8 +9,9 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+
 @PageTitle("Start")
-@Route("")
+@Route(value = "") // Add layout reference here
 @AnonymousAllowed
 public class StartView extends Composite<VerticalLayout> {
 

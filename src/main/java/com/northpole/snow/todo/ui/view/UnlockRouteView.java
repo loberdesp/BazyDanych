@@ -13,6 +13,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+
+import jakarta.annotation.security.PermitAll;
+
 import com.vaadin.flow.router.Menu;
 
 import java.time.LocalDateTime;
@@ -23,6 +26,7 @@ import java.util.List;
 @Route("odblokuj-trase")
 @PageTitle("Odblokuj trasę")
 @Menu(order = 15, icon = "vaadin:unlock", title = "Odblokuj trasę")
+@PermitAll
 public class UnlockRouteView extends Main {
 
     public static class RouteBlock {

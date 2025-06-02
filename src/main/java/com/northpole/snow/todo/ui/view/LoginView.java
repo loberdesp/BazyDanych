@@ -1,51 +1,60 @@
 package com.northpole.snow.todo.ui.view;
 
-import com.northpole.snow.base.ui.component.ViewToolbar;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
-import com.vaadin.flow.router.Menu;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
-@PageTitle("Logowanie")
-@Route("my-view")
-@Menu(order = 12, title = "Logowanie", icon = "vaadin:sign-in")
 @AnonymousAllowed
-public class LoginView extends Main {
+@PageTitle("Logowanie")
+@Route("login")
+@Menu(order = 12, title = "Logowanie", icon = "vaadin:sign-in")
+public class LoginView extends VerticalLayout {
 
-  public LoginView() {
+    private TextField usernameField = new TextField("Nazwa użytkownika");
+    private PasswordField passwordField = new PasswordField("Hasło");
+    private Button loginButton = new Button("Zaloguj się");
 
-    EmailField emailField = new EmailField("Email");
-    emailField.setWidth("300px");
-    PasswordField passwordField = new PasswordField("Hasło");
-    passwordField.setWidth("300px");
+    public LoginView() {
+        setSizeFull();
+        setAlignItems(Alignment.CENTER);
+        setJustifyContentMode(JustifyContentMode.CENTER);
 
-    Button loginButton = new Button("Zaloguj się", e -> {
-      if (emailField.isEmpty() || passwordField.isEmpty()) {
-        Notification.show("Wszystkie pola są wymagane.", 3000, Notification.Position.MIDDLE);
-        return;
-      }
-      // Tutaj powinna być logika logowania
-      Notification.show("Zalogowano!", 3000, Notification.Position.MIDDLE);
-      emailField.clear();
-      passwordField.clear();
-    });
-    loginButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        FormLayout formLayout = new FormLayout(usernameField, passwordField, loginButton);
+        formLayout.setMaxWidth("300px");
 
-    VerticalLayout layout = new VerticalLayout(
-        new ViewToolbar("Logowanie"),
-        emailField,
-        passwordField,
-        loginButton);
-    layout.setSpacing(true);
-    layout.setPadding(true);
+        loginButton.addClickListener(e -> {
+            if (usernameField.isEmpty() || passwordField.isEmpty()) {
+                Notification.show("Wszystkie pola są wymagane.", 3000, Notification.Position.MIDDLE);
+                return;
+            }
 
-    add(layout);
-  }
+            UI.getCurrent().getPage().executeJs(
+                "const form = document.createElement('form');" +
+                "form.method = 'POST';" +
+                "form.action = '/login';" +
+                "const username = document.createElement('input');" +
+                "username.type = 'hidden';" +
+                "username.name = 'username';" +
+                "username.value = $0;" +
+                "const password = document.createElement('input');" +
+                "password.type = 'hidden';" +
+                "password.name = 'password';" +
+                "password.value = $1;" +
+                "form.appendChild(username);" +
+                "form.appendChild(password);" +
+                "document.body.appendChild(form);" +
+                "form.submit();",
+                usernameField.getValue(),
+                passwordField.getValue()
+            );
+        });
+
+        add(formLayout);
+    }
 }

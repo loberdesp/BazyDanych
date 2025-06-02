@@ -3,6 +3,7 @@ package com.northpole.snow.todo.ui.view;
 import com.northpole.snow.base.ui.component.ViewToolbar;
 import com.northpole.snow.todo.domain.Przystanek;
 import com.northpole.snow.todo.domain.PrzystanekRepository;
+import com.northpole.snow.todo.service.PrzystanekService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Main;
@@ -21,11 +22,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Menu(order = 1, icon = "vaadin:plus", title = "Dodaj przystanek")
 public class AddBusStopView extends Main {
 
-  private final PrzystanekRepository przystanekRepository;
+
+private final PrzystanekService przystanekService;
 
   @Autowired
-  public AddBusStopView(PrzystanekRepository przystanekRepository) {
-    this.przystanekRepository = przystanekRepository;
+  public AddBusStopView(PrzystanekService przystanekService) {
+    this.przystanekService = przystanekService;
+    
 
     // Pole: nazwa przystanku
     TextField stopName = new TextField("Nazwa przystanku");
@@ -58,7 +61,7 @@ public class AddBusStopView extends Main {
       przystanek.setUlica(ulica);
       przystanek.setPolozenie(polozenie);
 
-      przystanekRepository.save(przystanek);
+      przystanekService.save(przystanek);
 
       Notification.show("Dodano przystanek: " + nazwa, 3000, Notification.Position.MIDDLE);
       stopName.clear();

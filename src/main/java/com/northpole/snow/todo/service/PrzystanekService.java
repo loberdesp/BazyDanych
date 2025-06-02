@@ -5,11 +5,14 @@ import com.northpole.snow.todo.domain.PrzystanekRepository;
 
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional
 public class PrzystanekService {
   private final PrzystanekRepository przystanekRepository;
 
@@ -38,6 +41,10 @@ public class PrzystanekService {
 
   public List<Przystanek> findByLineNumber(String numerTrasy) {
     return przystanekRepository.findByNumerTrasy(numerTrasy);
+  }
+
+  public void deleteById(Integer id) {
+    przystanekRepository.deleteById(id);
   }
 
   public static class TrasaGodzinaDTO {
@@ -106,4 +113,9 @@ public class PrzystanekService {
         .filter(p -> !ulicaOk || p.getUlica().toLowerCase().contains(ulica.toLowerCase()))
         .toList();
   }
+
+  @Transactional
+  public Przystanek save(Przystanek przystanek) {
+  return przystanekRepository.save(przystanek);
+}
 }

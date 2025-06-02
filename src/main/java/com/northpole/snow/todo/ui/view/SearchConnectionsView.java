@@ -29,7 +29,7 @@ import java.util.Comparator;
 import com.vaadin.flow.component.combobox.ComboBox;
 
 @PageTitle("Wyszukaj połączenia")
-@Route("my-view4")
+@Route("wyszukaj-polaczenia")
 @Menu(order = 7, title = "Wyszukaj połączenia", icon = "vaadin:search")
 @AnonymousAllowed
 public class SearchConnectionsView extends Main {

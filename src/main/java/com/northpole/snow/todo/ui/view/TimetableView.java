@@ -19,7 +19,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @PageTitle("Rozklad jazdy")
-@Route("my-view3")
+@Route("rozklad-jazdy")
 @Menu(order = 5, title = "Rozkład jazdy", icon = "vaadin:calendar")
 @AnonymousAllowed
 public class TimetableView extends Main {

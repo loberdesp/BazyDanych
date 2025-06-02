@@ -1,34 +1,66 @@
 package com.northpole.snow.base.ui.view;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
+import com.vaadin.flow.theme.lumo.LumoUtility.*;
+
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import static com.vaadin.flow.theme.lumo.LumoUtility.*;
 
 @Layout
 public final class MainLayout extends AppLayout {
 
+    private SideNav sideNav;
+
     public MainLayout() {
         setPrimarySection(Section.DRAWER);
-        addToDrawer(createHeader(), new Scroller(createSideNav()), createUserMenu());
+
+        sideNav = createSideNav();
+
+        // VerticalLayout to hold sideNav and logout button
+        var drawerLayout = new VerticalLayout();
+        drawerLayout.setSizeFull();
+        drawerLayout.setPadding(false);
+        drawerLayout.setSpacing(false);
+
+        drawerLayout.add(sideNav);
+
+        if (isUserLoggedIn()) {
+            var logoutButton = createLogoutButton();
+            // Push logout button to bottom
+            logoutButton.getElement().getStyle().set("margin-top", "auto");
+            drawerLayout.add(logoutButton);
+        }
+
+        // Make sideNav take all space except logout button
+        drawerLayout.setFlexGrow(1, sideNav);
+        drawerLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+
+        addToDrawer(createHeader(), new Scroller(drawerLayout), createUserMenu());
     }
 
     private Div createHeader() {
-        // TODO Replace with real application logo and name
         var appLogo = VaadinIcon.CUBES.create();
         appLogo.addClassNames(TextColor.PRIMARY, IconSize.LARGE);
 
@@ -43,8 +75,23 @@ public final class MainLayout extends AppLayout {
     private SideNav createSideNav() {
         var nav = new SideNav();
         nav.addClassNames(Margin.Horizontal.MEDIUM);
-        MenuConfiguration.getMenuEntries().forEach(entry -> nav.addItem(createSideNavItem(entry)));
+
+        MenuConfiguration.getMenuEntries().forEach(entry -> {
+            if (isMenuEntryVisible(entry)) {
+                nav.addItem(createSideNavItem(entry));
+            }
+        });
+
         return nav;
+    }
+
+    private Button createLogoutButton() {
+        Button logoutButton = new Button("Logout", new Icon(VaadinIcon.SIGN_OUT));
+        logoutButton.addClassNames("logout-button"); // optional style
+        logoutButton.addClickListener(e -> {
+            UI.getCurrent().getPage().setLocation("/logout");
+        });
+        return logoutButton;
     }
 
     private SideNavItem createSideNavItem(MenuEntry menuEntry) {
@@ -56,7 +103,6 @@ public final class MainLayout extends AppLayout {
     }
 
     private Component createUserMenu() {
-        // TODO Replace with real user information and actions
         var avatar = new Avatar("John Smith");
         avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);
         avatar.addClassNames(Margin.Right.SMALL);
@@ -75,4 +121,39 @@ public final class MainLayout extends AppLayout {
         return userMenu;
     }
 
+    private boolean isMenuEntryVisible(MenuEntry entry) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean isAuthenticated = auth != null && auth.isAuthenticated()
+                && !(auth instanceof AnonymousAuthenticationToken);
+
+        if (isAnonymousAllowed(entry)) {
+            return true;
+        }
+
+        if (!isAuthenticated) {
+            return false;
+        }
+
+        if (entry.path().startsWith("admin")) {
+            return auth.getAuthorities().stream()
+                    .anyMatch(ga -> ga.getAuthority().equals("ROLE_ADMIN"));
+        }
+
+        return true;
+    }
+
+    private boolean isAnonymousAllowed(MenuEntry entry) {
+        String path = entry.path();
+        if (path == null) {
+            return false;
+        }
+        return path.equals("/login") || path.equals("/rejestracja") || path.equals("/przegladaj-trase")
+                || path.equals("/wyszukaj-polaczenia") || path.equals("/rozklad-jazdy");
+    }
+
+    private boolean isUserLoggedIn() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
+    }
 }

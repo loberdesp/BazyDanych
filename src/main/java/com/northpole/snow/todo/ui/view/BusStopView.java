@@ -3,6 +3,7 @@ package com.northpole.snow.todo.ui.view;
 import com.northpole.snow.base.ui.component.ViewToolbar;
 import com.northpole.snow.todo.domain.Przystanek;
 import com.northpole.snow.todo.domain.PrzystanekRepository;
+import com.northpole.snow.todo.service.PrzystanekService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Main;
@@ -21,15 +22,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Menu(order = 2, icon = "vaadin:map-marker", title = "Usuń przystanek")
 public class BusStopView extends Main {
 
-    private final PrzystanekRepository przystanekRepository;
+    private final PrzystanekService przystanekService;
 
     @Autowired
-    public BusStopView(PrzystanekRepository przystanekRepository) {
-        this.przystanekRepository = przystanekRepository;
+    public BusStopView(PrzystanekService przystanekService) {
+        this.przystanekService = przystanekService;
 
         // Pole wyboru przystanku
         ComboBox<Przystanek> stopCombo = new ComboBox<>("Wybierz przystanek do usunięcia");
-        stopCombo.setItems(przystanekRepository.findAll());
+        stopCombo.setItems(przystanekService.findAll());
         stopCombo.setItemLabelGenerator(Przystanek::getNazwa);
         stopCombo.setWidth("300px");
 
@@ -37,9 +38,9 @@ public class BusStopView extends Main {
         Button deleteButton = new Button("Usuń przystanek", e -> {
             Przystanek selected = stopCombo.getValue();
             if (selected != null) {
-                przystanekRepository.deleteById(selected.getId());
+                przystanekService.deleteById(selected.getId());
                 Notification.show("Usunięto przystanek: " + selected.getNazwa(), 3000, Notification.Position.MIDDLE);
-                stopCombo.setItems(przystanekRepository.findAll());
+                stopCombo.setItems(przystanekService.findAll());
                 stopCombo.clear();
             } else {
                 Notification.show("Wybierz przystanek do usunięcia", 3000, Notification.Position.MIDDLE);
