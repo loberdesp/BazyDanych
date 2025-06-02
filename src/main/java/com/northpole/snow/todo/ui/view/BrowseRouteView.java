@@ -16,10 +16,12 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.flow.router.Menu;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.security.RolesAllowed;
 
 import java.util.List;
 import java.util.ArrayList;
 
+@RolesAllowed("USER")  // Only admins can access
 @Route("przegladaj-trase")
 @PageTitle("Przeglądaj trasę")
 @Menu(order = 6, icon = "vaadin:road", title = "Przeglądaj trasę")

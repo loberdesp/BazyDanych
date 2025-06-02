@@ -21,13 +21,15 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.flow.router.Menu;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.security.RolesAllowed;
 
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Route("harmonogram")
+@RolesAllowed("ADMIN")  // Only admins can access
+@Route("admin/harmonogram")
 @PageTitle("Zdefiniuj kurs")
 @Menu(order = 4, icon = "vaadin:calendar-clock", title = "Dodaj kurs")
 public class ScheduleView extends Main {

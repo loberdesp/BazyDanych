@@ -12,11 +12,12 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 
+@RolesAllowed("USER")  // Only admins can access
 @Route("zmiana-hasla")
 @PageTitle("Zmiana hasła")
 @Menu(order = 14, title = "Zmiana hasła", icon = "vaadin:lock")
-@PermitAll
 public class ChangePasswordView extends Main {
 
   public ChangePasswordView() {

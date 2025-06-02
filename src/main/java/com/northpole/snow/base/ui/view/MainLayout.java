@@ -26,7 +26,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import static com.vaadin.flow.theme.lumo.LumoUtility.*;
+import jakarta.annotation.security.RolesAllowed;
 
 @Layout
 public final class MainLayout extends AppLayout {
@@ -38,7 +38,6 @@ public final class MainLayout extends AppLayout {
 
         sideNav = createSideNav();
 
-        // VerticalLayout to hold sideNav and logout button
         var drawerLayout = new VerticalLayout();
         drawerLayout.setSizeFull();
         drawerLayout.setPadding(false);
@@ -48,12 +47,10 @@ public final class MainLayout extends AppLayout {
 
         if (isUserLoggedIn()) {
             var logoutButton = createLogoutButton();
-            // Push logout button to bottom
             logoutButton.getElement().getStyle().set("margin-top", "auto");
             drawerLayout.add(logoutButton);
         }
 
-        // Make sideNav take all space except logout button
         drawerLayout.setFlexGrow(1, sideNav);
         drawerLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
 
@@ -87,10 +84,8 @@ public final class MainLayout extends AppLayout {
 
     private Button createLogoutButton() {
         Button logoutButton = new Button("Logout", new Icon(VaadinIcon.SIGN_OUT));
-        logoutButton.addClassNames("logout-button"); // optional style
-        logoutButton.addClickListener(e -> {
-            UI.getCurrent().getPage().setLocation("/logout");
-        });
+        logoutButton.addClassNames("logout-button");
+        logoutButton.addClickListener(e -> UI.getCurrent().getPage().setLocation("/logout"));
         return logoutButton;
     }
 
@@ -103,45 +98,87 @@ public final class MainLayout extends AppLayout {
     }
 
     private Component createUserMenu() {
-        var avatar = new Avatar("John Smith");
-        avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);
-        avatar.addClassNames(Margin.Right.SMALL);
-        avatar.setColorIndex(5);
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    boolean isLoggedIn = auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
 
-        var userMenu = new MenuBar();
-        userMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
-        userMenu.addClassNames(Margin.MEDIUM);
-
-        var userMenuItem = userMenu.addItem(avatar);
-        userMenuItem.add("John Smith");
-        userMenuItem.getSubMenu().addItem("View Profile");
-        userMenuItem.getSubMenu().addItem("Manage Settings");
-        userMenuItem.getSubMenu().addItem("Logout");
-
-        return userMenu;
+    if (!isLoggedIn) {
+        // Jeśli użytkownik anonimowy, nie pokazuj menu użytkownika (zwróć pusty komponent lub null)
+        return new Div();  // lub: return null;
     }
+
+    String username = auth.getName();
+
+    var avatar = new Avatar(username);
+    avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);
+    avatar.addClassNames(Margin.Right.SMALL);
+    avatar.setColorIndex(5);
+
+    var userMenu = new MenuBar();
+    userMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY_INLINE);
+    userMenu.addClassNames(Margin.MEDIUM);
+
+    var userMenuItem = userMenu.addItem(avatar);
+    userMenuItem.add(username);
+    userMenuItem.getSubMenu().addItem("View Profile");
+    userMenuItem.getSubMenu().addItem("Manage Settings");
+    userMenuItem.getSubMenu().addItem("Logout", e -> UI.getCurrent().getPage().setLocation("/logout"));
+
+    return userMenu;
+}
+
 
     private boolean isMenuEntryVisible(MenuEntry entry) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        boolean isAuthenticated = auth != null && auth.isAuthenticated()
-                && !(auth instanceof AnonymousAuthenticationToken);
+    boolean isAuthenticated = auth != null && auth.isAuthenticated()
+            && !(auth instanceof AnonymousAuthenticationToken);
 
-        if (isAnonymousAllowed(entry)) {
-            return true;
-        }
+    String path = entry.path();
+    if (path == null) {
+        return false;
+    }
 
-        if (!isAuthenticated) {
-            return false;
-        }
+    // Strony tylko dla anonimowych (niezalogowanych)
+    if (isAnonymousOnly(path)) {
+        return !isAuthenticated;
+    }
 
-        if (entry.path().startsWith("admin")) {
-            return auth.getAuthorities().stream()
-                    .anyMatch(ga -> ga.getAuthority().equals("ROLE_ADMIN"));
-        }
-
+    // Strony dostępne dla wszystkich (anonimowi + zalogowani)
+    if (isPublic(path)) {
         return true;
     }
+
+    // Nie zalogowany nie widzi innych stron
+    if (!isAuthenticated) {
+        return false;
+    }
+
+    // Admin pages: tylko ROLE_ADMIN
+    if (path.startsWith("/admin")) {
+        return auth.getAuthorities().stream()
+                .anyMatch(ga -> ga.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    // User pages: ROLE_USER lub ROLE_ADMIN
+    if (path.startsWith("/user")) {
+        return auth.getAuthorities().stream()
+                .anyMatch(ga -> ga.getAuthority().equals("ROLE_USER") || ga.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    // Inne strony dostępne zalogowanym
+    return true;
+}
+
+private boolean isAnonymousOnly(String path) {
+    return path.equals("/login") || path.equals("/rejestracja");
+}
+
+private boolean isPublic(String path) {
+    // Tutaj podaj strony dostępne dla wszystkich, np:
+    return path.equals("/przegladaj-trase") 
+        || path.equals("/wyszukaj-polaczenia") 
+        || path.equals("/rozklad-jazdy");
+}
 
     private boolean isAnonymousAllowed(MenuEntry entry) {
         String path = entry.path();

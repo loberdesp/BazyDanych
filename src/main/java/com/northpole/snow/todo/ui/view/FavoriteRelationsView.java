@@ -8,9 +8,11 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 
+@RolesAllowed("USER")  // Only admins can access
 @PageTitle("Ulubione relacje")
-@Route("my-view5")
+@Route("user/favorite-relations")
 @Menu(order = 10, title = "Ulubione relacje", icon = "vaadin:star")
 @PermitAll
 public class FavoriteRelationsView extends Main {

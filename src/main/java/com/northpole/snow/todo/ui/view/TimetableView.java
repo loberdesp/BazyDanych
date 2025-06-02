@@ -12,6 +12,9 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+
+import jakarta.annotation.security.RolesAllowed;
+
 import com.northpole.snow.todo.service.PrzystanekService;
 import com.northpole.snow.todo.domain.Przystanek;
 import com.vaadin.flow.component.grid.Grid;
@@ -22,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Route("rozklad-jazdy")
 @Menu(order = 5, title = "Rozkład jazdy", icon = "vaadin:calendar")
 @AnonymousAllowed
+@RolesAllowed("USER") 
 public class TimetableView extends Main {
 
   private final PrzystanekService przystanekService;

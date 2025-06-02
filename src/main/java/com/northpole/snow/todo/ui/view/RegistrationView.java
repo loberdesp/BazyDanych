@@ -37,6 +37,8 @@ public class RegistrationView extends Main {
     firstNameField.setWidth("300px");
     TextField lastNameField = new TextField("Nazwisko");
     lastNameField.setWidth("300px");
+    TextField loginField = new TextField("Login");
+    lastNameField.setWidth("300px");
     TextField phoneField = new TextField("Numer telefonu");
     phoneField.setWidth("300px");
     EmailField emailField = new EmailField("Email");
@@ -62,7 +64,7 @@ public class RegistrationView extends Main {
         Notification.show("Użytkownik z takim emailem już istnieje.", 3000, Notification.Position.MIDDLE);
         return;
       }
-      if (pasazerRepository.findByLogin(emailField.getValue()).isPresent()) {
+      if (pasazerRepository.findByLogin(loginField.getValue()).isPresent()) {
         Notification.show("Użytkownik z takim loginem już istnieje.", 3000, Notification.Position.MIDDLE);
         return;
       }
@@ -72,7 +74,7 @@ public class RegistrationView extends Main {
       pasazer.setImienazwisko(firstNameField.getValue() + " " + lastNameField.getValue());
       pasazer.setEmail(emailField.getValue());
       pasazer.setNumertelefonu(phoneField.getValue());
-      pasazer.setLogin(emailField.getValue()); // or you can add a login field if needed
+      pasazer.setLogin(loginField.getValue());
       pasazer.setHaslo(passwordEncoder.encode(passwordField.getValue()));
 
       // Save to DB
@@ -84,6 +86,7 @@ public class RegistrationView extends Main {
       lastNameField.clear();
       phoneField.clear();
       emailField.clear();
+      loginField.clear();
       passwordField.clear();
       confirmPasswordField.clear();
     });
@@ -92,6 +95,7 @@ public class RegistrationView extends Main {
     Button cancelButton = new Button("Anuluj", e -> {
       firstNameField.clear();
       lastNameField.clear();
+      loginField.clear();
       phoneField.clear();
       emailField.clear();
       passwordField.clear();
@@ -104,6 +108,7 @@ public class RegistrationView extends Main {
         new ViewToolbar("Dane pasażera"),
         firstNameField,
         lastNameField,
+        loginField,
         phoneField,
         emailField,
         passwordField,

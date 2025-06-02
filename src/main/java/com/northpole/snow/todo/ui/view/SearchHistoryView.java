@@ -8,11 +8,12 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import jakarta.annotation.security.RolesAllowed;
 
+@RolesAllowed("USER")  // Only admins can access
 @PageTitle("Historia Wyszukiwań")
 @Route("my-view6")
 @Menu(order = 11, title = "Historia", icon = "vaadin:book")
-@AnonymousAllowed
 public class SearchHistoryView extends Main {
 
   public SearchHistoryView() {

@@ -22,8 +22,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import jakarta.annotation.security.RolesAllowed;
 
-@Route("odblokuj-trase")
+@RolesAllowed("ADMIN")  // Only admins can access
+@Route("admin/odblokuj-trase")
 @PageTitle("Odblokuj trasę")
 @Menu(order = 15, icon = "vaadin:unlock", title = "Odblokuj trasę")
 @PermitAll

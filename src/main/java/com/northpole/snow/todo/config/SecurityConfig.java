@@ -53,13 +53,15 @@ public class SecurityConfig {
             .requestCache(requestCache -> requestCache.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/", "/login", "/register",
+                    "/",
                     "/css/**", "/js/**", "/images/**",
                     "/VAADIN/**", "/frontend/**", "/frontend-es6/**", "/frontend-esm/**",
                     "/webjars/**", "/manifest.webmanifest", "/sw.js", "/offline.html",
                     "/icons/**", "/themes/**"
                 ).permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/login", "/register").anonymous() // login page
+                .requestMatchers("/admin/**").hasRole("ADMIN")   // admin pages
+                .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")     // user pages
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

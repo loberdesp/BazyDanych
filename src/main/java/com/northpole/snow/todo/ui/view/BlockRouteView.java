@@ -13,10 +13,13 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.flow.router.Menu;
+import jakarta.annotation.security.RolesAllowed;
 
 import java.time.LocalDateTime;
 
-@Route("blokuj-trase")
+
+@RolesAllowed("ADMIN")  // Only admins can access
+@Route("admin/blokuj-trase")
 @PageTitle("Zablokuj trasę")
 @Menu(order = 15, icon = "vaadin:lock", title = "Zablokuj trasę")
 public class BlockRouteView extends Main {

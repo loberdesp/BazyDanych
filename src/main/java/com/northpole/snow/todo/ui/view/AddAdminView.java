@@ -12,8 +12,10 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.*;
+import jakarta.annotation.security.RolesAllowed;
 
-@Route("dodaj-admina")
+@RolesAllowed("ADMIN")  // Only admins can access
+@Route("admin/dodaj-admina")
 @PageTitle("Dodaj administratora")
 public class AddAdminView extends Main implements HasUrlParameter<String> {
 

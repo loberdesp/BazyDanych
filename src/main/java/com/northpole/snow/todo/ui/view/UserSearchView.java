@@ -16,8 +16,10 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import jakarta.annotation.security.RolesAllowed;
 
-@Route("szukaj-uzytkownikow")
+@RolesAllowed("ADMIN")  // Only admins can access
+@Route("admin/szukaj-uzytkownikow")
 @PageTitle("Szukaj użytkowników")
 @Menu(order = 15, icon = "vaadin:user", title = "Szukaj użytkowników")
 public class UserSearchView extends Main {

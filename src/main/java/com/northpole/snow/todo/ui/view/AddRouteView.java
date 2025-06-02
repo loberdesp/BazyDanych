@@ -17,11 +17,13 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import com.vaadin.flow.router.Menu;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.security.RolesAllowed;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Route("dodaj-trase")
+@RolesAllowed("ADMIN")  // Only admins can access
+@Route("admin/dodaj-trase")
 @PageTitle("Dodaj trasę")
 @Menu(order = 3, icon = "vaadin:plus", title = "Dodaj trasę")
 public class AddRouteView extends Main {

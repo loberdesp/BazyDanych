@@ -16,8 +16,11 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.security.RolesAllowed;
 
-@Route("add-bus-stop")
+
+@RolesAllowed("ADMIN")  // Only admins can access
+@Route("admin/add-bus-stop")
 @PageTitle("Dodaj przystanek")
 @Menu(order = 1, icon = "vaadin:plus", title = "Dodaj przystanek")
 public class AddBusStopView extends Main {
