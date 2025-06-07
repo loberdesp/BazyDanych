@@ -21,7 +21,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
 import java.util.ArrayList;
 
-@RolesAllowed("USER")  // Only admins can access
+@RolesAllowed("USER") // Only admins can access
 @Route("przegladaj-trase")
 @PageTitle("Przeglądaj trasę")
 @Menu(order = 6, icon = "vaadin:road", title = "Przeglądaj trasę")
@@ -62,7 +62,7 @@ public class BrowseRouteView extends Main {
         lineNumber.setWidth("300px");
 
         // ComboBox dla przystanku początkowego
-        ComboBox<String> startStop = new ComboBox<>("Przystanek początkowy");
+        ComboBox<String> startStop = new ComboBox<>("Wybierz przystanek");
         startStop.setPlaceholder("Najpierw wybierz linię");
         startStop.setWidth("300px");
         startStop.setEnabled(false);
@@ -82,12 +82,13 @@ public class BrowseRouteView extends Main {
                 String start = startStop.getValue();
                 int startIdx = allStops.indexOf(start);
                 if (startIdx >= 0) {
-                    // Pobierz czasy kumulujące od wybranego przystanku początkowego
-                    List<Integer> times = trasaService.getTimesForLine(lineNumber.getValue(), start);
+                    // Pobierz czasy kumulujące od pierwszego przystanku do każdego kolejnego
+                    List<Integer> times = trasaService.getTimesForLine(lineNumber.getValue(), allStops.get(0));
                     List<StopWithTime> stopsFromStart = new ArrayList<>();
-                    for (int i = startIdx, j = 0; i < allStops.size(); i++, j++) {
-                        Integer timeToNext = (j < times.size()) ? times.get(j) : null;
-                        stopsFromStart.add(new StopWithTime(allStops.get(i), timeToNext));
+                    int startTime = times.get(startIdx);
+                    for (int i = 0; i < allStops.size(); i++) {
+                        Integer czas = times.get(i) - startTime;
+                        stopsFromStart.add(new StopWithTime(allStops.get(i), czas));
                     }
                     stopsGrid.setItems(stopsFromStart);
                     stopsGrid.setVisible(true);
@@ -114,7 +115,7 @@ public class BrowseRouteView extends Main {
             if (selectedLine != null) {
                 startStop.setItems(trasaService.getStopsForLine(selectedLine));
                 startStop.setEnabled(true);
-                startStop.setPlaceholder("Wybierz przystanek początkowy");
+                startStop.setPlaceholder("Wybierz przystanek");
             } else {
                 startStop.clear();
                 startStop.setItems();

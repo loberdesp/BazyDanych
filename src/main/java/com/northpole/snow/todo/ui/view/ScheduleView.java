@@ -102,6 +102,8 @@ public class ScheduleView extends Main {
 
         TimePicker departureTime = new TimePicker("Godzina startu");
         departureTime.setWidth("200px");
+        departureTime.setLocale(new java.util.Locale("pl"));
+        departureTime.setStep(java.time.Duration.ofMinutes(30));
 
         Button addButton = new Button("Dodaj kurs", e -> {
             if (lineNumber.isEmpty() || lineName.isEmpty() || departureTime.isEmpty()) {

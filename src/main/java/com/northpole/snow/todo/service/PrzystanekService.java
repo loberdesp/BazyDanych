@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -112,6 +113,17 @@ public class PrzystanekService {
         .filter(p -> !nazwaOk || p.getNazwa().toLowerCase().contains(nazwa.toLowerCase()))
         .filter(p -> !ulicaOk || p.getUlica().toLowerCase().contains(ulica.toLowerCase()))
         .toList();
+  }
+
+
+  public List<LocalTime> getGodzinyDlaTrasy(Przystanek selected, Integer numerTrasy) {
+    // Pobierz wszystkie DTO dla przystanku
+    List<TrasaGodzinaDTO> trasy = getTrasyIGodziny(selected);
+    // Filtrowanie po numerze trasy i zbieranie godzin (pomijamy null)
+    return trasy.stream()
+        .filter(dto -> numerTrasy != null && numerTrasy.equals(dto.numerTrasy) && dto.godzinaStartu != null)
+        .map(dto -> dto.godzinaStartu)
+        .collect(Collectors.toList());
   }
 
   @Transactional

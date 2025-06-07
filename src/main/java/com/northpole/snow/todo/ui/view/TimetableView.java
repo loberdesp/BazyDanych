@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Route("rozklad-jazdy")
 @Menu(order = 5, title = "Rozkład jazdy", icon = "vaadin:calendar")
 @AnonymousAllowed
-@RolesAllowed("USER") 
+@RolesAllowed("USER")
 public class TimetableView extends Main {
 
   private final PrzystanekService przystanekService;
@@ -58,6 +58,16 @@ public class TimetableView extends Main {
       if (selected != null) {
         var trasyIGodziny = przystanekService.getTrasyIGodziny(selected);
 
+        // Usuwamy powtarzające się trasy po nazwie i numerze trasy
+        java.util.List<PrzystanekService.TrasaGodzinaDTO> unikalneTrasy = trasyIGodziny.stream()
+            .collect(java.util.stream.Collectors.toMap(
+                dto -> dto.nazwaTrasy + "#" + dto.numerTrasy,
+                dto -> dto,
+                (dto1, dto2) -> dto1))
+            .values()
+            .stream()
+            .toList();
+
         VerticalLayout dialogContent = new VerticalLayout();
         dialogContent.setSizeFull();
         dialogContent.add("Przystanek: " + selected.getNazwa());
@@ -65,14 +75,45 @@ public class TimetableView extends Main {
         Grid<PrzystanekService.TrasaGodzinaDTO> trasyGrid = new Grid<>(PrzystanekService.TrasaGodzinaDTO.class, false);
         trasyGrid.setAllRowsVisible(true);
         trasyGrid.setWidthFull();
-        trasyGrid.setHeight("500px"); // ustalamy wysokość, by pokazać więcej wierszy
+        trasyGrid.setHeight("500px");
 
         trasyGrid.addColumn(dto -> dto.nazwaTrasy).setHeader("Nazwa trasy").setAutoWidth(true).setFlexGrow(1);
         trasyGrid.addColumn(dto -> dto.numerTrasy).setHeader("Numer trasy").setAutoWidth(true).setFlexGrow(0);
-        trasyGrid.addColumn(dto -> dto.godzinaStartu != null ? dto.godzinaStartu.toString() : "")
-            .setHeader("Godzina startu").setAutoWidth(true).setFlexGrow(0);
 
-        trasyGrid.setItems(trasyIGodziny);
+        trasyGrid.setItems(unikalneTrasy);
+
+        // Obsługa kliknięcia w wiersz trasy
+        trasyGrid.asSingleSelect().addValueChangeListener(trasaEvent -> {
+          PrzystanekService.TrasaGodzinaDTO selectedTrasa = trasaEvent.getValue();
+          if (selectedTrasa != null) {
+            Dialog godzinyDialog = new Dialog();
+            godzinyDialog.setWidth("400px");
+            godzinyDialog.setHeight("600px");
+
+            VerticalLayout godzinyLayout = new VerticalLayout();
+            godzinyLayout
+                .add("Godziny odjazdu dla trasy: " + selectedTrasa.nazwaTrasy + " (" + selectedTrasa.numerTrasy + ")");
+
+            java.util.List<java.time.LocalTime> godziny = przystanekService
+                .getGodzinyDlaTrasy(selected, selectedTrasa.numerTrasy)
+                .stream()
+                .sorted()
+                .toList();
+
+            Grid<java.time.LocalTime> godzinyGrid = new Grid<>(java.time.LocalTime.class, false);
+            godzinyGrid.addColumn(godzina -> godzina.toString()).setHeader("Godzina odjazdu");
+            godzinyGrid.setItems(godziny);
+
+            godzinyLayout.add(godzinyGrid);
+
+            Button closeGodzinyButton = new Button("Zamknij", e2 -> godzinyDialog.close());
+            closeGodzinyButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            godzinyLayout.add(closeGodzinyButton);
+
+            godzinyDialog.add(godzinyLayout);
+            godzinyDialog.open();
+          }
+        });
 
         dialogContent.add(trasyGrid);
 
