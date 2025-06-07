@@ -22,7 +22,7 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.ArrayList;
 import java.util.List;
 
-@RolesAllowed("ADMIN")  // Only admins can access
+@RolesAllowed("ADMIN") // Only admins can access
 @Route("admin/dodaj-trase")
 @PageTitle("Dodaj trasę")
 @Menu(order = 3, icon = "vaadin:plus", title = "Dodaj trasę")
@@ -41,6 +41,11 @@ public class AddRouteView extends Main {
     TextField routeName = new TextField("Nazwa trasy");
     routeName.setPlaceholder("np. Dworzec - Centrum");
     routeName.setWidth("300px");
+
+    // Dodaj pole na nazwę trasy w drugim kierunku
+    TextField routeNameReverse = new TextField("Nazwa trasy w drugą stronę");
+    routeNameReverse.setPlaceholder("np. Centrum - Dworzec");
+    routeNameReverse.setWidth("300px");
 
     // Pobierz przystanki z bazy
     List<String> allStops = trasaService.getAllStopsFromDb();
@@ -90,6 +95,7 @@ public class AddRouteView extends Main {
     Button saveButton = new Button("Zapisz trasę", e -> {
       String num = routeNumber.getValue();
       String name = routeName.getValue();
+      String nameReverse = routeNameReverse.getValue();
       List<TrasaService.PrzystanekNaTrasieDTO> przystankiNaTrasie = new ArrayList<>();
       boolean valid = true;
       for (int i = 0; i < stopRows.size(); i++) {
@@ -110,17 +116,46 @@ public class AddRouteView extends Main {
             i + 1,
             czas));
       }
-      if (num == null || num.trim().isEmpty() || name == null || name.trim().isEmpty() || przystankiNaTrasie.isEmpty()
-          || !valid) {
+      if (num == null || num.trim().isEmpty() || name == null || name.trim().isEmpty() ||
+          nameReverse == null || nameReverse.trim().isEmpty() ||
+          przystankiNaTrasie.isEmpty() || !valid) {
         Notification.show("Uzupełnij wszystkie pola i poprawnie podaj czasy przejazdu", 3000,
             Notification.Position.MIDDLE);
         return;
       }
-      boolean ok = trasaService.addNewRouteWithStopsDTO(num.trim(), name.trim(), przystankiNaTrasie);
-      if (ok) {
-        Notification.show("Dodano trasę!", 3000, Notification.Position.MIDDLE);
+
+      // Dodaj trasę w pierwszym kierunku
+      boolean ok1 = trasaService.addNewRouteWithStopsDTO(num.trim(), name.trim(), przystankiNaTrasie);
+
+      // Przygotuj trasę w drugim kierunku
+      List<TrasaService.PrzystanekNaTrasieDTO> reverseStops = new ArrayList<>();
+      int n = przystankiNaTrasie.size();
+      // Wylicz sumy czasów do każdego przystanku (od początku)
+      List<Integer> cumulative = new ArrayList<>();
+      int sum = 0;
+      for (int i = 0; i < n; i++) {
+        sum += (i == 0 ? 0 : przystankiNaTrasie.get(i).czasPrzejazdu);
+        cumulative.add(sum);
+      }
+      // Odwróć kolejność i przelicz czasy
+      for (int i = n - 1; i >= 0; i--) {
+        String stop = przystankiNaTrasie.get(i).nazwaPrzystanku;
+        int idx = n - 1 - i;
+        int czas = (idx == 0) ? 0 : cumulative.get(n - 1 - (idx - 1)) - cumulative.get(n - 1 - idx);
+        reverseStops.add(new TrasaService.PrzystanekNaTrasieDTO(
+            num.trim(),
+            stop,
+            n - i,
+            czas));
+      }
+
+      boolean ok2 = trasaService.addNewRouteWithStopsDTO(num.trim(), nameReverse.trim(), reverseStops);
+
+      if (ok1 && ok2) {
+        Notification.show("Dodano trasę w obu kierunkach!", 3000, Notification.Position.MIDDLE);
         routeNumber.clear();
         routeName.clear();
+        routeNameReverse.clear();
         stopsLayout.removeAll();
         stopRows.clear();
         addStopRow.run();
@@ -134,6 +169,7 @@ public class AddRouteView extends Main {
         new ViewToolbar("Dodaj trasę"),
         routeNumber,
         routeName,
+        routeNameReverse, // dodaj pole do layoutu
         stopsLayout,
         addStopButton,
         saveButton);
