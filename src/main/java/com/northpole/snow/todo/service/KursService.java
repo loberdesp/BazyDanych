@@ -50,4 +50,8 @@ public class KursService {
     kursRepository.save(kurs);
     return true;
   }
+
+  public void deleteById(Integer id) {
+    kursRepository.deleteById(id);
+  }
 }

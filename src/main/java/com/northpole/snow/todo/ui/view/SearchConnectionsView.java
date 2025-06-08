@@ -34,7 +34,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 
 @PageTitle("Wyszukaj połączenia")
 @Route("wyszukaj-polaczenia")
-@RolesAllowed("USER") 
+@RolesAllowed("USER")
 @Menu(order = 7, title = "Wyszukaj połączenia", icon = "vaadin:search")
 @AnonymousAllowed
 public class SearchConnectionsView extends Main {
@@ -101,7 +101,51 @@ public class SearchConnectionsView extends Main {
         return;
       }
 
-      List<Connection> found = connectionSearchService.findConnections(startStop, endStop, afterTime);
+      // Przelicz godzinę odjazdu jako czas startu kursu + suma czasów przejazdu do
+      // przystanku początkowego
+      List<Connection> found = connectionSearchService.findConnections(startStop, endStop, afterTime).stream()
+          .map(conn -> {
+            try {
+              Trasa trasa = trasaService.getAllTrasy().stream()
+                  .filter(t -> t.getNumertrasy().toString().equals(conn.getLineNumber())
+                      && t.getNazwatrasy().equals(conn.getLineName()))
+                  .findFirst().orElse(null);
+              if (trasa == null)
+                return conn;
+
+              Kurs kurs = kursService.findAll().stream()
+                  .filter(k -> k.getTrasaid() != null && k.getTrasaid().getId().equals(trasa.getId()))
+                  .findFirst().orElse(null);
+              if (kurs == null)
+                return conn;
+
+              List<Przystaneknatrasie> przystanki = trasa.getPrzystankinatrasie().stream()
+                  .sorted(Comparator.comparingInt(Przystaneknatrasie::getKolejnosc))
+                  .toList();
+
+              // Suma czasów przejazdu do wybranego przystanku początkowego (włącznie z nim)
+              int sumaCzasow = 0;
+              for (Przystaneknatrasie pnt : przystanki) {
+                if (pnt.getCzasprzejazdu() != null) {
+                  sumaCzasow += pnt.getCzasprzejazdu();
+                }
+                if (pnt.getPrzystanekid().getNazwa().equals(conn.getStartStop())) {
+                  break;
+                }
+              }
+              java.time.LocalTime godzinaOdjazdu = kurs.getGodzinastartu().plusMinutes(sumaCzasow);
+              return new Connection(
+                  conn.getLineNumber(),
+                  conn.getLineName(),
+                  conn.getStartStop(),
+                  conn.getEndStop(),
+                  godzinaOdjazdu.toString(),
+                  conn.getTravelTime());
+            } catch (Exception ex) {
+              return conn;
+            }
+          })
+          .toList();
 
       if (found.isEmpty()) {
         Notification.show("Brak połączeń dla podanych przystanków.", 3000, Notification.Position.MIDDLE);

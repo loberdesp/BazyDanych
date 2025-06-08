@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@RolesAllowed("ADMIN")  // Only admins can access
+@RolesAllowed("ADMIN") // Only admins can access
 @Route("admin/harmonogram")
 @PageTitle("Zdefiniuj kurs")
-@Menu(order = 4, icon = "vaadin:calendar-clock", title = "Dodaj kurs")
+@Menu(order = 4, icon = "vaadin:calendar-clock", title = "Zarządzaj kursem")
 public class ScheduleView extends Main {
 
     private final KursService kursService;
@@ -135,7 +135,27 @@ public class ScheduleView extends Main {
         grid.addColumn(k -> k.getGodzinastartu() != null ? k.getGodzinastartu().toString() : "")
                 .setHeader("Godzina startu").setAutoWidth(true);
 
-        grid.setHeight("400px");
+        // Dodaj kolumnę z przyciskiem Usuń
+        grid.addComponentColumn(kurs -> {
+            Button deleteBtn = new Button("Usuń", event -> {
+                com.vaadin.flow.component.dialog.Dialog confirmDialog = new com.vaadin.flow.component.dialog.Dialog();
+                confirmDialog.add("Czy na pewno chcesz usunąć ten kurs?");
+                Button yesBtn = new Button("Tak", e -> {
+                    kursService.deleteById(kurs.getId());
+                    confirmDialog.close();
+                    Notification.show("Usunięto kurs", 3000, Notification.Position.MIDDLE);
+                    refreshGrid();
+                });
+                Button noBtn = new Button("Nie", e -> confirmDialog.close());
+                HorizontalLayout dialogBtns = new HorizontalLayout(yesBtn, noBtn);
+                confirmDialog.add(dialogBtns);
+                confirmDialog.open();
+            });
+            deleteBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
+            return deleteBtn;
+        }).setHeader("Usuń").setAutoWidth(true);
+
+        grid.setHeight("600px");
     }
 
     private void refreshGrid() {

@@ -213,4 +213,8 @@ public class TrasaService {
   public List<Trasa> getAllTrasy() {
     return trasaRepository.findAllWithKursAndPrzystanki();
   }
+
+  public void deleteById(Integer id) {
+    trasaRepository.deleteById(id);
+  }
 }

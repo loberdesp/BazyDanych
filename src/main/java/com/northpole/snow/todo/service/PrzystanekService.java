@@ -45,6 +45,12 @@ public class PrzystanekService {
   }
 
   public void deleteById(Integer id) {
+    // Najpierw usuń powiązania z Przystaneknatrasie
+    Przystanek przystanek = przystanekRepository.findById(id).orElse(null);
+    if (przystanek != null && przystanek.getPrzystankinatrasie() != null) {
+      przystanek.getPrzystankinatrasie().clear();
+      przystanekRepository.save(przystanek);
+    }
     przystanekRepository.deleteById(id);
   }
 

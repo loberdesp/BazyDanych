@@ -18,8 +18,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.annotation.security.RolesAllowed;
 
-
-@RolesAllowed("ADMIN")  // Only admins can access
+@RolesAllowed("ADMIN") // Only admins can access
 @Route("admin/bus-stops")
 @PageTitle("Manage Bus Stops")
 @Menu(order = 2, icon = "vaadin:map-marker", title = "Usuń przystanek")
@@ -41,10 +40,15 @@ public class BusStopView extends Main {
         Button deleteButton = new Button("Usuń przystanek", e -> {
             Przystanek selected = stopCombo.getValue();
             if (selected != null) {
-                przystanekService.deleteById(selected.getId());
-                Notification.show("Usunięto przystanek: " + selected.getNazwa(), 3000, Notification.Position.MIDDLE);
-                stopCombo.setItems(przystanekService.findAll());
-                stopCombo.clear();
+                try {
+                    przystanekService.deleteById(selected.getId());
+                    Notification.show("Usunięto przystanek: " + selected.getNazwa(), 3000,
+                            Notification.Position.MIDDLE);
+                    stopCombo.setItems(przystanekService.findAll());
+                    stopCombo.clear();
+                } catch (Exception ex) {
+                    Notification.show("Najpierw usuń trasy z tym przystankiem!", 5000, Notification.Position.MIDDLE);
+                }
             } else {
                 Notification.show("Wybierz przystanek do usunięcia", 3000, Notification.Position.MIDDLE);
             }

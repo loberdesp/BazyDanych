@@ -94,9 +94,12 @@ public class TimetableView extends Main {
             godzinyLayout
                 .add("Godziny odjazdu dla trasy: " + selectedTrasa.nazwaTrasy + " (" + selectedTrasa.numerTrasy + ")");
 
-            java.util.List<java.time.LocalTime> godziny = przystanekService
-                .getGodzinyDlaTrasy(selected, selectedTrasa.numerTrasy)
-                .stream()
+            // Pokazuj tylko godziny dla wybranej trasy (nazwa i numer muszą się zgadzać)
+            java.util.List<java.time.LocalTime> godziny = trasyIGodziny.stream()
+                .filter(dto -> dto.nazwaTrasy.equals(selectedTrasa.nazwaTrasy)
+                    && dto.numerTrasy.equals(selectedTrasa.numerTrasy)
+                    && dto.godzinaStartu != null)
+                .map(dto -> dto.godzinaStartu)
                 .sorted()
                 .toList();
 
