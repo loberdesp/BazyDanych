@@ -12,9 +12,9 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 @AnonymousAllowed
 @PageTitle("Logowanie")
-@Route("login")
+@Route(value = "login")
 @Menu(order = 12, title = "Logowanie", icon = "vaadin:sign-in")
-public class LoginView extends VerticalLayout {
+public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
     private TextField usernameField = new TextField("Nazwa użytkownika");
     private PasswordField passwordField = new PasswordField("Hasło");
@@ -34,16 +34,16 @@ public class LoginView extends VerticalLayout {
                 return;
             }
 
+            // Ręczne przesłanie formularza POST do Spring Security
             UI.getCurrent().getPage().executeJs(
                 "const form = document.createElement('form');" +
                 "form.method = 'POST';" +
                 "form.action = '/login';" +
+                "form.style.display = 'none';" +
                 "const username = document.createElement('input');" +
-                "username.type = 'hidden';" +
                 "username.name = 'username';" +
                 "username.value = $0;" +
                 "const password = document.createElement('input');" +
-                "password.type = 'hidden';" +
                 "password.name = 'password';" +
                 "password.value = $1;" +
                 "form.appendChild(username);" +
@@ -56,5 +56,14 @@ public class LoginView extends VerticalLayout {
         });
 
         add(formLayout);
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        if (event.getLocation().getQueryParameters().getParameters().containsKey("error")) {
+            Notification.show("Błędna nazwa użytkownika lub hasło.", 3000, Notification.Position.MIDDLE);
+        } else if (event.getLocation().getQueryParameters().getParameters().containsKey("logout")) {
+            Notification.show("Zostałeś wylogowany.", 3000, Notification.Position.MIDDLE);
+        }
     }
 }

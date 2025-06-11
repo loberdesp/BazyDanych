@@ -5,4 +5,5 @@ import java.util.Optional;
 
 public interface AdministratorRepository extends JpaRepository<Administrator, Integer> {
     Optional<Administrator> findByPasazerid(Pasazer pasazer);
+    boolean existsByPasazerid(Pasazer pasazer);
 }
