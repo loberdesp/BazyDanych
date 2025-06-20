@@ -93,67 +93,73 @@ public class SearchConnectionsView extends Main {
 
     connectionGrid.setItems(new ArrayList<>()); // domyślnie pusto
 
-    searchButton.addClickListener(e -> {
-      String startStop = startStopField.getValue();
-      String endStop = endStopField.getValue();
-      var afterTime = departureTimeField.getValue();
+searchButton.addClickListener(e -> {
+  String startStop = startStopField.getValue();
+  String endStop = endStopField.getValue();
+  var afterTime = departureTimeField.getValue();
 
-      if (startStop == null || endStop == null || startStop.isBlank() || endStop.isBlank()) {
-        Notification.show("Podaj oba przystanki!", 3000, Notification.Position.MIDDLE);
-        return;
-      }
+  if (startStop == null || endStop == null || startStop.isBlank() || endStop.isBlank()) {
+    Notification.show("Podaj oba przystanki!", 3000, Notification.Position.MIDDLE);
+    return;
+  }
 
-      // Przelicz godzinę odjazdu jako czas startu kursu + suma czasów przejazdu do
-      // przystanku początkowego
-      List<Connection> found = connectionSearchService.findConnections(startStop, endStop, afterTime).stream()
-          .map(conn -> {
-            try {
-              Trasa trasa = trasaService.getAllTrasy().stream()
-                  .filter(t -> t.getNumertrasy().toString().equals(conn.getLineNumber())
-                      && t.getNazwatrasy().equals(conn.getLineName()))
-                  .findFirst().orElse(null);
-              if (trasa == null)
-                return conn;
+  List<Connection> found = new ArrayList<>();
 
-              Kurs kurs = kursService.findAll().stream()
-                  .filter(k -> k.getTrasaid() != null && k.getTrasaid().getId().equals(trasa.getId()))
-                  .findFirst().orElse(null);
-              if (kurs == null)
-                return conn;
+  for (Trasa trasa : trasaService.getAllTrasy()) {
+    List<Przystaneknatrasie> stops = new ArrayList<>(trasa.getPrzystankinatrasie());
+    stops.sort(Comparator.comparingInt(Przystaneknatrasie::getKolejnosc));
 
-              List<Przystaneknatrasie> przystanki = trasa.getPrzystankinatrasie().stream()
-                  .sorted(Comparator.comparingInt(Przystaneknatrasie::getKolejnosc))
-                  .toList();
+    int startIdx = -1, endIdx = -1;
+    for (int i = 0; i < stops.size(); i++) {
+      String name = stops.get(i).getPrzystanekid().getNazwa();
+      if (name.equalsIgnoreCase(startStop)) startIdx = i;
+      if (name.equalsIgnoreCase(endStop)) endIdx = i;
+    }
 
-              // Suma czasów przejazdu do wybranego przystanku początkowego (włącznie z nim)
-              int sumaCzasow = 0;
-              for (Przystaneknatrasie pnt : przystanki) {
-                if (pnt.getCzasprzejazdu() != null) {
-                  sumaCzasow += pnt.getCzasprzejazdu();
-                }
-                if (pnt.getPrzystanekid().getNazwa().equals(conn.getStartStop())) {
-                  break;
-                }
-              }
-              java.time.LocalTime godzinaOdjazdu = kurs.getGodzinastartu().plusMinutes(sumaCzasow);
-              return new Connection(
-                  conn.getLineNumber(),
-                  conn.getLineName(),
-                  conn.getStartStop(),
-                  conn.getEndStop(),
-                  godzinaOdjazdu.toString(),
-                  conn.getTravelTime());
-            } catch (Exception ex) {
-              return conn;
-            }
-          })
-          .toList();
+    if (startIdx == -1 || endIdx == -1 || startIdx >= endIdx) continue;
 
-      if (found.isEmpty()) {
-        Notification.show("Brak połączeń dla podanych przystanków.", 3000, Notification.Position.MIDDLE);
-      }
-      connectionGrid.setItems(found);
-    });
+    // suma czasu przejazdu między przystankami A → B
+    int travelMinutes = 0;
+    for (int i = startIdx + 1; i <= endIdx; i++) {
+      Integer czas = stops.get(i).getCzasprzejazdu();
+      if (czas != null) travelMinutes += czas;
+    }
+
+    // suma czasu do przystanku początkowego (offset względem kursu)
+    int offsetMinutes = 0;
+    for (int i = 0; i <= startIdx; i++) {
+      Integer czas = stops.get(i).getCzasprzejazdu();
+      if (czas != null) offsetMinutes += czas;
+    }
+
+    for (Kurs kurs : trasa.getKurs()) {
+      if (kurs.getGodzinastartu() == null) continue;
+
+      java.time.LocalTime departureFromStop = kurs.getGodzinastartu().plusMinutes(offsetMinutes);
+
+      if (afterTime != null && departureFromStop.isBefore(afterTime)) continue;
+
+      found.add(new Connection(
+          String.valueOf(trasa.getNumertrasy()),
+          trasa.getNazwatrasy(),
+          startStop,
+          endStop,
+          departureFromStop.toString(),
+          String.format("%02d:%02d", travelMinutes / 60, travelMinutes % 60)
+      ));
+    }
+  }
+
+  if (found.isEmpty()) {
+    Notification.show("Brak połączeń dla podanych przystanków.", 3000, Notification.Position.MIDDLE);
+  }
+
+  found.sort(Comparator.comparing(conn -> java.time.LocalTime.parse(conn.getDepartureTime())));
+
+
+  connectionGrid.setItems(found);
+});
+
 
     connectionGrid.addItemClickListener(event -> {
       Connection selected = event.getItem();
