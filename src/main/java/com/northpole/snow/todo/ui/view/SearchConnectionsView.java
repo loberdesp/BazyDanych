@@ -1,36 +1,32 @@
 package com.northpole.snow.todo.ui.view;
 
 import com.northpole.snow.base.ui.component.ViewToolbar;
+import com.northpole.snow.todo.domain.Kurs;
+import com.northpole.snow.todo.domain.Przystaneknatrasie;
+import com.northpole.snow.todo.domain.Trasa;
+import com.northpole.snow.todo.service.ConnectionSearchService;
+import com.northpole.snow.todo.service.KursService;
+import com.northpole.snow.todo.service.TrasaService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
-
-import com.northpole.snow.todo.domain.Trasa;
-import com.northpole.snow.todo.domain.Przystaneknatrasie;
-import com.northpole.snow.todo.domain.Kurs;
-import com.northpole.snow.todo.service.TrasaService;
-import com.northpole.snow.todo.service.PrzystanekService;
-import com.northpole.snow.todo.service.KursService;
-import com.northpole.snow.todo.service.ConnectionSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
-import com.vaadin.flow.component.combobox.ComboBox;
+import java.util.List;
 
 @PageTitle("Wyszukaj połączenia")
 @Route("wyszukaj-polaczenia")
@@ -45,12 +41,21 @@ public class SearchConnectionsView extends Main {
 
   @Autowired
   public SearchConnectionsView(TrasaService trasaService, KursService kursService,
-      ConnectionSearchService connectionSearchService) {
+                               ConnectionSearchService connectionSearchService) {
     this.trasaService = trasaService;
     this.kursService = kursService;
     this.connectionSearchService = connectionSearchService;
 
-    // Pobierz wszystkie przystanki z bazy
+    Grid<Connection> connectionGrid = new Grid<>(Connection.class, false);
+    connectionGrid.addColumn(Connection::getStartStop).setHeader("Przystanek początkowy");
+    connectionGrid.addColumn(Connection::getEndStop).setHeader("Przystanek docelowy");
+    connectionGrid.addColumn(Connection::getLineNumber).setHeader("Nr linii");
+    connectionGrid.addColumn(Connection::getLineName).setHeader("Nazwa linii");
+    connectionGrid.addColumn(Connection::getDepartureTime).setHeader("Czas odjazdu");
+    connectionGrid.addColumn(Connection::getTravelTime).setHeader("Czas podróży");
+    connectionGrid.setWidthFull();
+    connectionGrid.setHeight("300px");
+
     List<String> allStops = trasaService.getAllStopsFromDb();
 
     ComboBox<String> startStopField = new ComboBox<>("Przystanek początkowy");
@@ -71,95 +76,76 @@ public class SearchConnectionsView extends Main {
     Button searchButton = new Button("Szukaj");
     searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-    Grid<Connection> connectionGrid = new Grid<>(Connection.class, false);
-
     Button resetButton = new Button("Resetuj", e -> {
       startStopField.clear();
       endStopField.clear();
       departureTimeField.clear();
-      connectionGrid.setItems(new ArrayList<>()); // resetuj tabelę
+      connectionGrid.setItems(new ArrayList<>());
     });
 
     HorizontalLayout buttonLayout = new HorizontalLayout(searchButton, resetButton);
 
-    connectionGrid.addColumn(Connection::getStartStop).setHeader("Przystanek początkowy");
-    connectionGrid.addColumn(Connection::getEndStop).setHeader("Przystanek docelowy");
-    connectionGrid.addColumn(Connection::getLineNumber).setHeader("Nr linii");
-    connectionGrid.addColumn(Connection::getLineName).setHeader("Nazwa linii");
-    connectionGrid.addColumn(Connection::getDepartureTime).setHeader("Czas odjazdu");
-    connectionGrid.addColumn(Connection::getTravelTime).setHeader("Czas podróży");
-    connectionGrid.setWidthFull();
-    connectionGrid.setHeight("300px");
+    searchButton.addClickListener(e -> {
+      String startStop = startStopField.getValue();
+      String endStop = endStopField.getValue();
+      LocalTime afterTime = departureTimeField.getValue();
 
-    connectionGrid.setItems(new ArrayList<>()); // domyślnie pusto
+      if (startStop == null || endStop == null || startStop.isBlank() || endStop.isBlank()) {
+        Notification.show("Podaj oba przystanki!", 3000, Notification.Position.MIDDLE);
+        return;
+      }
 
-searchButton.addClickListener(e -> {
-  String startStop = startStopField.getValue();
-  String endStop = endStopField.getValue();
-  var afterTime = departureTimeField.getValue();
+      List<Connection> found = new ArrayList<>();
 
-  if (startStop == null || endStop == null || startStop.isBlank() || endStop.isBlank()) {
-    Notification.show("Podaj oba przystanki!", 3000, Notification.Position.MIDDLE);
-    return;
-  }
+      for (Trasa trasa : trasaService.getAllTrasy()) {
+        List<Przystaneknatrasie> stops = new ArrayList<>(trasa.getPrzystankinatrasie());
+        stops.sort(Comparator.comparingInt(Przystaneknatrasie::getKolejnosc));
 
-  List<Connection> found = new ArrayList<>();
+        int startIdx = -1, endIdx = -1;
+        for (int i = 0; i < stops.size(); i++) {
+          String name = stops.get(i).getPrzystanekid().getNazwa();
+          if (name.equalsIgnoreCase(startStop)) startIdx = i;
+          if (name.equalsIgnoreCase(endStop)) endIdx = i;
+        }
 
-  for (Trasa trasa : trasaService.getAllTrasy()) {
-    List<Przystaneknatrasie> stops = new ArrayList<>(trasa.getPrzystankinatrasie());
-    stops.sort(Comparator.comparingInt(Przystaneknatrasie::getKolejnosc));
+        if (startIdx == -1 || endIdx == -1 || startIdx >= endIdx) continue;
 
-    int startIdx = -1, endIdx = -1;
-    for (int i = 0; i < stops.size(); i++) {
-      String name = stops.get(i).getPrzystanekid().getNazwa();
-      if (name.equalsIgnoreCase(startStop)) startIdx = i;
-      if (name.equalsIgnoreCase(endStop)) endIdx = i;
-    }
+        int travelMinutes = 0;
+        for (int i = startIdx + 1; i <= endIdx; i++) {
+          Integer czas = stops.get(i).getCzasprzejazdu();
+          if (czas != null) travelMinutes += czas;
+        }
 
-    if (startIdx == -1 || endIdx == -1 || startIdx >= endIdx) continue;
+        int offsetMinutes = 0;
+        for (int i = 0; i <= startIdx; i++) {
+          Integer czas = stops.get(i).getCzasprzejazdu();
+          if (czas != null) offsetMinutes += czas;
+        }
 
-    // suma czasu przejazdu między przystankami A → B
-    int travelMinutes = 0;
-    for (int i = startIdx + 1; i <= endIdx; i++) {
-      Integer czas = stops.get(i).getCzasprzejazdu();
-      if (czas != null) travelMinutes += czas;
-    }
+        for (Kurs kurs : trasa.getKurs()) {
+          if (kurs.getGodzinastartu() == null) continue;
 
-    // suma czasu do przystanku początkowego (offset względem kursu)
-    int offsetMinutes = 0;
-    for (int i = 0; i <= startIdx; i++) {
-      Integer czas = stops.get(i).getCzasprzejazdu();
-      if (czas != null) offsetMinutes += czas;
-    }
+          LocalTime departureFromStop = kurs.getGodzinastartu().plusMinutes(offsetMinutes);
+          if (afterTime != null && departureFromStop.isBefore(afterTime)) continue;
 
-    for (Kurs kurs : trasa.getKurs()) {
-      if (kurs.getGodzinastartu() == null) continue;
+          found.add(new Connection(
+              String.valueOf(trasa.getNumertrasy()),
+              trasa.getNazwatrasy(),
+              startStop,
+              endStop,
+              departureFromStop.toString(),
+              String.format("%02d:%02d", travelMinutes / 60, travelMinutes % 60)
+          ));
+        }
+      }
 
-      java.time.LocalTime departureFromStop = kurs.getGodzinastartu().plusMinutes(offsetMinutes);
+      if (found.isEmpty()) {
+        Notification.show("Brak połączeń dla podanych przystanków.", 3000, Notification.Position.MIDDLE);
+      }
 
-      if (afterTime != null && departureFromStop.isBefore(afterTime)) continue;
-
-      found.add(new Connection(
-          String.valueOf(trasa.getNumertrasy()),
-          trasa.getNazwatrasy(),
-          startStop,
-          endStop,
-          departureFromStop.toString(),
-          String.format("%02d:%02d", travelMinutes / 60, travelMinutes % 60)
-      ));
-    }
-  }
-
-  if (found.isEmpty()) {
-    Notification.show("Brak połączeń dla podanych przystanków.", 3000, Notification.Position.MIDDLE);
-  }
-
-  found.sort(Comparator.comparing(conn -> java.time.LocalTime.parse(conn.getDepartureTime())));
-
-
-  connectionGrid.setItems(found);
-});
-
+      found.sort(Comparator.comparing(conn -> LocalTime.parse(conn.getDepartureTime())));
+      connectionGrid.setItems(found);
+    });
 
     connectionGrid.addItemClickListener(event -> {
       Connection selected = event.getItem();
@@ -172,7 +158,8 @@ searchButton.addClickListener(e -> {
         endStopField,
         departureTimeField,
         buttonLayout,
-        connectionGrid);
+        connectionGrid
+    );
     layout.setSpacing(true);
     layout.setPadding(true);
     add(layout);
@@ -186,8 +173,8 @@ searchButton.addClickListener(e -> {
     private String departureTime;
     private String travelTime;
 
-    public Connection(String lineNumber, String lineName, String startStop, String endStop, String departureTime,
-        String travelTime) {
+    public Connection(String lineNumber, String lineName, String startStop, String endStop,
+                      String departureTime, String travelTime) {
       this.lineNumber = lineNumber;
       this.lineName = lineName;
       this.startStop = startStop;
@@ -196,28 +183,12 @@ searchButton.addClickListener(e -> {
       this.travelTime = travelTime;
     }
 
-    public String getLineNumber() {
-      return lineNumber;
-    }
-
-    public String getLineName() {
-      return lineName;
-    }
-
-    public String getStartStop() {
-      return startStop;
-    }
-
-    public String getEndStop() {
-      return endStop;
-    }
-
-    public String getDepartureTime() {
-      return departureTime;
-    }
-
-    public String getTravelTime() {
-      return travelTime;
-    }
+    public String getLineNumber() { return lineNumber; }
+    public String getLineName() { return lineName; }
+    public String getStartStop() { return startStop; }
+    public String getEndStop() { return endStop; }
+    public String getDepartureTime() { return departureTime; }
+    public String getTravelTime() { return travelTime; }
   }
 }
+
