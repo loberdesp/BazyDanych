@@ -65,6 +65,8 @@ public class SearchConnectionsView extends Main {
 
     TimePicker departureTimeField = new TimePicker("Godzina odjazdu");
     departureTimeField.setWidth("200px");
+    departureTimeField.setLocale(new java.util.Locale("pl"));
+    departureTimeField.setStep(java.time.Duration.ofMinutes(30));
 
     Button searchButton = new Button("Szukaj");
     searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
