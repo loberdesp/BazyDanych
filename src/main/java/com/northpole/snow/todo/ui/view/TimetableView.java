@@ -66,6 +66,13 @@ public class TimetableView extends Main {
                 (dto1, dto2) -> dto1))
             .values()
             .stream()
+            .sorted(java.util.Comparator.comparing(dto -> {
+              try {
+                return Integer.parseInt(dto.numerTrasy.toString());
+              } catch (Exception e) {
+                return Integer.MAX_VALUE;
+              }
+            }))
             .toList();
 
         VerticalLayout dialogContent = new VerticalLayout();
